@@ -1,0 +1,114 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #000;
+  color: #0f0;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 16px;
+  line-height: 1.5;
+  padding: 20px;
+  overflow: hidden;
+  height: 100vh;
+}
+
+#logo-container {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 100;
+}
+
+#logo {
+  width: 50px;
+  height: 50px;
+  border: 1px solid #0f0;
+  border-radius: 8px;
+}
+
+#terminal {
+  width: 70%;
+  height: 90vh;
+  border: 1px solid #0f0;
+  border-radius: 4px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  bottom: 20px;
+  overflow: hidden;
+}
+
+#output {
+  flex: 1;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  margin-bottom: 10px;
+  padding-right: 10px;
+}
+
+#input-line {
+  display: flex;
+  align-items: center;
+}
+
+.prompt {
+  color: #0f0;
+  margin-right: 8px;
+}
+
+#command-input {
+  background: transparent;
+  border: none;
+  color: #0f0;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 16px;
+  outline: none;
+  flex: 1;
+  padding: 2px;
+}
+
+#command-input::placeholder {
+  color: #090;
+}
+
+#assistant {
+  position: absolute;
+  right: 20px;
+  top: 80px;
+  width: 25%;
+  height: 70vh;
+  border: 1px solid #090;
+  border-radius: 4px;
+  padding: 10px;
+  background-color: #000;
+  overflow-y: auto;
+}
+
+#assistant h3 {
+  border-bottom: 1px solid #0f0;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.command {
+  color: #0f9;
+}
+
+@media (max-width: 768px) {
+  #terminal, #assistant {
+    width: 90%;
+    height: 40%;
+    right: 5%;
+    left: 5%;
+  }
+  #assistant {
+    top: 50%;
+  }
+}

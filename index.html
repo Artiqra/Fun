@@ -370,7 +370,7 @@
             flex: 1;
         }
 
-        .settings-input {
+        .settings-input, .settings-select {
             background: transparent;
             border: 1px solid var(--dark-green);
             color: var(--primary-green);
@@ -408,6 +408,11 @@
             padding: 10px;
             border-radius: 3px;
             background: rgba(0, 255, 0, 0.05);
+        }
+
+        .app-item.enabled {
+            border-color: var(--primary-green);
+            background: rgba(0, 255, 0, 0.1);
         }
 
         .app-item h4 {
@@ -534,6 +539,9 @@
             <input type="password" class="login-input" id="password-input" placeholder="Enter Password" autofocus>
             <div class="login-error" id="login-error"></div>
             <button class="login-button" onclick="attemptLogin()">ACCESS SYSTEM</button>
+            <div style="margin-top: 20px; font-size: 10px; color: #666;">
+                Default password: sebas123
+            </div>
         </div>
     </div>
 
@@ -551,16 +559,7 @@
             </div>
 
             <!-- Terminal Output -->
-            <div class="terminal-output" id="terminal-output">
-                <div class="terminal-line">
-                    <span class="prompt">admin@terminal-os:~$</span> <span class="command">system boot --secure</span>
-                </div>
-                <div class="terminal-line output">Initializing Secure Terminal OS...</div>
-                <div class="terminal-line output">Loading security modules: [████████████████████] 100%</div>
-                <div class="terminal-line output">Loading AI integration: [████████████████████] 100%</div>
-                <div class="terminal-line output success">System ready. Welcome to Terminal OS!</div>
-                <div class="terminal-line output">Type 'help' to see available commands.</div>
-            </div>
+            <div class="terminal-output" id="terminal-output"></div>
 
             <!-- Terminal Input -->
             <div class="terminal-input-container">
@@ -575,11 +574,7 @@
                 <span>🤖 AI Assistant</span>
                 <button class="assistant-close" onclick="toggleAssistant()">&times;</button>
             </div>
-            <div class="assistant-content" id="assistant-content">
-                <div class="ai-response">AI Assistant initialized and ready for queries.</div>
-                <div>Monitoring system activity...</div>
-                <div>Available AI providers: OpenAI, Anthropic, Google, Ollama</div>
-            </div>
+            <div class="assistant-content" id="assistant-content"></div>
             <div class="assistant-input">
                 <input type="text" id="ai-input" placeholder="Ask AI anything..." onkeypress="handleAIInput(event)">
                 <button onclick="sendToAI()">Send</button>
@@ -619,7 +614,7 @@
                     <h3>🤖 AI Configuration</h3>
                     <div class="settings-item">
                         <span class="settings-label">AI Provider:</span>
-                        <select class="settings-input" id="ai-provider">
+                        <select class="settings-select" id="ai-provider">
                             <option value="">Select Provider</option>
                             <option value="openai">OpenAI (GPT-4)</option>
                             <option value="anthropic">Anthropic (Claude)</option>
@@ -660,9 +655,7 @@
                 <!-- App Management -->
                 <div class="settings-section">
                     <h3>📱 App Management</h3>
-                    <div class="app-grid" id="app-grid">
-                        <!-- Apps will be dynamically loaded here -->
-                    </div>
+                    <div class="app-grid" id="app-grid"></div>
                 </div>
 
                 <!-- System Settings -->
@@ -670,7 +663,7 @@
                     <h3>💻 System Settings</h3>
                     <div class="settings-item">
                         <span class="settings-label">Terminal Theme:</span>
-                        <select class="settings-input" id="theme-selector">
+                        <select class="settings-select" id="theme-selector">
                             <option value="green">Matrix Green</option>
                             <option value="amber">Amber</option>
                             <option value="cyan">Cyan</option>
@@ -698,13 +691,13 @@
 
     <script>
         /**
-         * TERMINAL OS v3.0.0 - Enhanced Secure Version
-         * Features: Password Protection, AI Integration, App Management, Settings
+         * TERMINAL OS v3.0.0 - Complete Functional Version
+         * Features: Password Protection, Real AI Integration, App Management, Gmail, Settings
          */
 
         // Global configuration object
         const CONFIG = {
-            password: localStorage.getItem('terminal_password') || 'admin123',
+            password: localStorage.getItem('terminal_password') || 'sebas123',
             ai: {
                 provider: localStorage.getItem('ai_provider') || '',
                 apiKey: localStorage.getItem('ai_api_key') || '',
@@ -720,7 +713,7 @@
                 fontSize: parseInt(localStorage.getItem('system_font_size')) || 14,
                 historyLimit: parseInt(localStorage.getItem('system_history_limit')) || 100
             },
-            apps: JSON.parse(localStorage.getItem('enabled_apps') || '{}')
+            apps: JSON.parse(localStorage.getItem('enabled_apps') || '{"gmail":true,"calculator":true,"filemanager":true,"notes":true,"system":true,"weather":false}')
         };
 
         // Available applications
@@ -728,41 +721,74 @@
             gmail: {
                 name: 'Gmail Integration',
                 description: 'Read emails, check inbox, manage messages',
-                enabled: true,
-                commands: ['gmail', 'inbox', 'unread', 'connect gmail']
+                enabled: CONFIG.apps.gmail || false,
+                commands: ['gmail', 'inbox', 'unread', 'connect']
             },
             calculator: {
                 name: 'Calculator',
                 description: 'Perform mathematical calculations',
-                enabled: true,
+                enabled: CONFIG.apps.calculator || false,
                 commands: ['calc', 'math']
             },
             filemanager: {
                 name: 'File Manager',
                 description: 'Browse and manage files (simulated)',
-                enabled: true,
-                commands: ['ls', 'cd', 'mkdir', 'rm', 'cat']
+                enabled: CONFIG.apps.filemanager || false,
+                commands: ['ls', 'cd', 'mkdir', 'rm', 'cat', 'touch']
             },
             weather: {
                 name: 'Weather App',
                 description: 'Get weather information for any city',
-                enabled: false,
+                enabled: CONFIG.apps.weather || false,
                 commands: ['weather']
             },
             notes: {
                 name: 'Notes App',
                 description: 'Create and manage text notes',
-                enabled: true,
+                enabled: CONFIG.apps.notes || false,
                 commands: ['note', 'notes', 'save-note']
             },
             system: {
                 name: 'System Monitor',
                 description: 'Monitor system resources and processes',
-                enabled: true,
+                enabled: CONFIG.apps.system || false,
                 commands: ['htop', 'ps', 'df', 'free', 'uptime']
             }
         };
 
+        /**
+         * Authentication System
+         */
+        function attemptLogin() {
+            const passwordInput = document.getElementById('password-input');
+            const errorDiv = document.getElementById('login-error');
+            const password = passwordInput.value;
+
+            if (password === CONFIG.password) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-interface').classList.remove('hidden');
+                initializeTerminal();
+                errorDiv.textContent = '';
+            } else {
+                errorDiv.textContent = 'Invalid password. Please try again.';
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        }
+
+        // Handle Enter key on login
+        document.addEventListener('DOMContentLoaded', () => {
+            const passwordInput = document.getElementById('password-input');
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    attemptLogin();
+                }
+            });
+        });
+
+        /**
+         * Main Terminal OS Class
+         */
         class TerminalOS {
             constructor() {
                 this.commandHistory = [];
@@ -774,6 +800,7 @@
                 this.assistant = null;
                 this.fileSystem = this.initFileSystem();
                 this.notes = JSON.parse(localStorage.getItem('terminal_notes') || '[]');
+                this.startTime = new Date();
                 
                 // Gmail integration
                 this.gmailAuth = null;
@@ -788,35 +815,29 @@
                 this.initializeAssistant();
                 this.updatePrompt();
                 this.applyTheme();
-                this.loadGoogleAPI();
-                this.loadApps();
+                this.loadSettings();
+                this.showWelcomeMessage();
             }
 
             initFileSystem() {
                 return {
-                    '/': {
-                        type: 'directory',
-                        contents: {
-                            'home': {
-                                type: 'directory',
-                                contents: {
-                                    'admin': {
-                                        type: 'directory',
-                                        contents: {
-                                            'documents': { type: 'directory', contents: {} },
-                                            'downloads': { type: 'directory', contents: {} },
-                                            'projects': { type: 'directory', contents: {} },
-                                            'readme.txt': { type: 'file', content: 'Welcome to Terminal OS!' }
-                                        }
-                                    }
-                                }
-                            },
-                            'etc': { type: 'directory', contents: {} },
-                            'var': { type: 'directory', contents: {} },
-                            'tmp': { type: 'directory', contents: {} }
-                        }
+                    '/home/admin': {
+                        'documents': { type: 'directory' },
+                        'downloads': { type: 'directory' },
+                        'projects': { type: 'directory' },
+                        'readme.txt': { type: 'file', content: 'Welcome to Terminal OS!' },
+                        'config.sys': { type: 'file', content: 'System configuration file' }
                     }
                 };
+            }
+
+            showWelcomeMessage() {
+                this.print('System boot sequence complete.', 'success');
+                this.print('Welcome to Terminal OS v3.0.0 - Secure Mode', 'success');
+                this.print('Type "help" to see available commands.', 'info');
+                this.print('Type "settings" to configure AI and apps.', 'info');
+                this.print('Type "assistant show" to display AI assistant.', 'info');
+                this.print('─'.repeat(60), 'info');
             }
 
             setupEventListeners() {
@@ -849,14 +870,6 @@
                         input.focus();
                     }
                 });
-
-                // Settings font size slider
-                const fontSizeSlider = document.getElementById('font-size');
-                if (fontSizeSlider) {
-                    fontSizeSlider.addEventListener('input', (e) => {
-                        document.getElementById('font-size-value').textContent = e.target.value + 'px';
-                    });
-                }
             }
 
             navigateHistory(direction) {
@@ -874,6 +887,17 @@
 
                 if (this.historyIndex >= 0) {
                     input.value = this.commandHistory[this.commandHistory.length - 1 - this.historyIndex];
+                }
+            }
+
+            autoComplete(partial) {
+                const commands = Object.keys(this.getAvailableCommands());
+                const matches = commands.filter(cmd => cmd.startsWith(partial));
+                
+                if (matches.length === 1) {
+                    document.getElementById('terminal-input').value = matches[0];
+                } else if (matches.length > 1) {
+                    this.print(`Possible commands: ${matches.join(', ')}`, 'info');
                 }
             }
 
@@ -920,4 +944,3050 @@
                 const baseCommands = {
                     // Core commands
                     help: () => this.showHelp(),
-                    clear: () => this.clear
+                    clear: () => this.clearTerminal(),
+                    cls: () => this.clearTerminal(),
+                    whoami: () => this.print(this.user),
+                    pwd: () => this.print(this.currentDirectory),
+                    date: () => this.print(new Date().toString()),
+                    uptime: () => this.print(`System uptime: ${this.getUptime()}`),
+                    exit: () => this.logout(),
+                    logout: () => this.logout(),
+                    
+                    // Settings and configuration
+                    settings: () => this.openSettings(),
+                    config: () => this.openSettings(),
+                    
+                    // AI Assistant commands
+                    assistant: (args) => this.assistantCommand(args),
+                    ai: (args) => this.askAI(args.join(' ')),
+                    
+                    // System information
+                    version: () => this.print('Terminal OS v3.0.0 - Secure Mode'),
+                    status: () => this.showSystemStatus(),
+                    
+                    // Fun commands
+                    matrix: () => this.matrixEffect(),
+                    cowsay: (args) => this.cowsay(args.join(' ')),
+                    fortune: () => this.fortune(),
+                    figlet: (args) => this.figlet(args.join(' '))
+                };
+
+                // Add app-specific commands based on enabled apps
+                const appCommands = this.getAppCommands();
+                return { ...baseCommands, ...appCommands };
+            }
+
+            getAppCommands() {
+                const commands = {};
+
+                if (AVAILABLE_APPS.gmail.enabled) {
+                    commands['connect'] = (args) => this.connectGmail();
+                    commands['disconnect'] = (args) => this.disconnectGmail();
+                    commands['gmail'] = (args) => this.gmailCommand(args);
+                    commands['inbox'] = () => this.gmailCommand(['inbox']);
+                    commands['unread'] = () => this.gmailCommand(['unread']);
+                }
+
+                if (AVAILABLE_APPS.calculator.enabled) {
+                    commands['calc'] = (args) => this.calculate(args.join(' '));
+                    commands['math'] = (args) => this.calculate(args.join(' '));
+                }
+
+                if (AVAILABLE_APPS.filemanager.enabled) {
+                    commands['ls'] = (args) => this.listFiles(args);
+                    commands['cd'] = (args) => this.changeDirectory(args[0]);
+                    commands['mkdir'] = (args) => this.makeDirectory(args[0]);
+                    commands['rm'] = (args) => this.removeFile(args[0]);
+                    commands['cat'] = (args) => this.displayFile(args[0]);
+                    commands['touch'] = (args) => this.createFile(args[0]);
+                }
+
+                if (AVAILABLE_APPS.notes.enabled) {
+                    commands['note'] = (args) => this.noteCommand(args);
+                    commands['notes'] = () => this.listNotes();
+                    commands['save-note'] = (args) => this.saveNote(args);
+                }
+
+                if (AVAILABLE_APPS.system.enabled) {
+                    commands['ps'] = () => this.showProcesses();
+                    commands['htop'] = () => this.showSystemInfo();
+                    commands['df'] = () => this.showDiskUsage();
+                    commands['free'] = () => this.showMemoryUsage();
+                }
+
+                if (AVAILABLE_APPS.weather.enabled) {
+                    commands['weather'] = (args) => this.getWeather(args[0]);
+                }
+
+                return commands;
+            }
+
+            showHelp() {
+                let helpText = `
+TERMINAL OS v3.0.0 - Available Commands:
+
+CORE COMMANDS:
+  help          - Show this help message
+  clear/cls     - Clear the terminal screen
+  whoami        - Display current user
+  pwd           - Print working directory
+  date          - Show current date and time
+  uptime        - Show system uptime
+  status        - Show system status
+  settings      - Open configuration panel
+  logout/exit   - Log out of system
+
+AI ASSISTANT:
+  ai <message>  - Ask AI a question
+  assistant show/hide - Control AI panel
+                `;
+
+                // Add app-specific help based on enabled apps
+                if (AVAILABLE_APPS.gmail.enabled) {
+                    helpText += `
+GMAIL (${AVAILABLE_APPS.gmail.enabled ? 'ENABLED' : 'DISABLED'}):
+  connect       - Connect to Gmail account
+  disconnect    - Disconnect from Gmail
+  gmail inbox   - Show inbox messages
+  gmail unread  - Show unread messages
+  inbox         - Shortcut for inbox
+  unread        - Shortcut for unread messages`;
+                }
+
+                if (AVAILABLE_APPS.calculator.enabled) {
+                    helpText += `
+CALCULATOR (${AVAILABLE_APPS.calculator.enabled ? 'ENABLED' : 'DISABLED'}):
+  calc <expr>   - Calculate mathematical expression
+  math <expr>   - Calculate mathematical expression`;
+                }
+
+                if (AVAILABLE_APPS.filemanager.enabled) {
+                    helpText += `
+FILE MANAGER (${AVAILABLE_APPS.filemanager.enabled ? 'ENABLED' : 'DISABLED'}):
+  ls            - List directory contents
+  cd <dir>      - Change directory
+  mkdir <name>  - Create directory
+  rm <file>     - Remove file
+  cat <file>    - Display file contents
+  touch <file>  - Create empty file`;
+                }
+
+                if (AVAILABLE_APPS.notes.enabled) {
+                    helpText += `
+NOTES (${AVAILABLE_APPS.notes.enabled ? 'ENABLED' : 'DISABLED'}):
+  notes         - List all notes
+  note new <title> - Create new note
+  note view <id> - View note
+  note delete <id> - Delete note`;
+                }
+
+                if (AVAILABLE_APPS.system.enabled) {
+                    helpText += `
+SYSTEM MONITOR (${AVAILABLE_APPS.system.enabled ? 'ENABLED' : 'DISABLED'}):
+  ps            - Show running processes
+  htop          - Show system information
+  df            - Show disk usage
+  free          - Show memory usage`;
+                }
+
+                if (AVAILABLE_APPS.weather.enabled) {
+                    helpText += `
+WEATHER (${AVAILABLE_APPS.weather.enabled ? 'ENABLED' : 'DISABLED'}):
+  weather <city> - Get weather for city`;
+                }
+
+                helpText += `
+
+FUN COMMANDS:
+  matrix        - Display matrix effect
+  cowsay <text> - ASCII cow with message
+  fortune       - Display random fortune
+  figlet <text> - ASCII art text
+
+Use TAB for autocompletion and ↑/↓ for command history.
+Use Ctrl+L to clear, Ctrl+A for assistant, Ctrl+S for settings.
+                `;
+
+                this.print(helpText.trim(), 'info');
+            }
+
+            // File Manager Commands
+            listFiles(args) {
+                const path = args[0] || this.currentDirectory;
+                const contents = this.fileSystem[path];
+                
+                if (!contents) {
+                    this.print(`ls: cannot access '${path}': No such file or directory`, 'error');
+                    return;
+                }
+
+                this.print(`Contents of ${path}:`, 'info');
+                Object.entries(contents).forEach(([name, item]) => {
+                    const type = item.type === 'directory' ? 'd' : '-';
+                    const color = item.type === 'directory' ? 'info' : 'output';
+                    this.print(`${type}rwxr-xr-x 1 ${this.user} ${this.user} ${name}`, color);
+                });
+            }
+
+            changeDirectory(path) {
+                if (!path) {
+                    this.currentDirectory = '/home/admin';
+                    this.updatePrompt();
+                    return;
+                }
+
+                if (path === '..') {
+                    const parts = this.currentDirectory.split('/').filter(p => p);
+                    parts.pop();
+                    this.currentDirectory = '/' + parts.join('/') || '/home/admin';
+                } else if (path.startsWith('/')) {
+                    this.currentDirectory = path;
+                } else {
+                    this.currentDirectory += '/' + path;
+                }
+                
+                this.updatePrompt();
+                this.print(`Changed directory to ${this.currentDirectory}`, 'success');
+            }
+
+            makeDirectory(name) {
+                if (!name) {
+                    this.print('mkdir: missing operand', 'error');
+                    return;
+                }
+                
+                if (!this.fileSystem[this.currentDirectory]) {
+                    this.fileSystem[this.currentDirectory] = {};
+                }
+                
+                this.fileSystem[this.currentDirectory][name] = { type: 'directory' };
+                this.print(`Directory '${name}' created`, 'success');
+            }
+
+            createFile(name) {
+                if (!name) {
+                    this.print('touch: missing operand', 'error');
+                    return;
+                }
+                
+                if (!this.fileSystem[this.currentDirectory]) {
+                    this.fileSystem[this.currentDirectory] = {};
+                }
+                
+                this.fileSystem[this.currentDirectory][name] = { 
+                    type: 'file', 
+                    content: '',
+                    created: new Date().toISOString()
+                };
+                this.print(`File '${name}' created`, 'success');
+            }
+
+            displayFile(name) {
+                if (!name) {
+                    this.print('cat: missing operand', 'error');
+                    return;
+                }
+
+                const file = this.fileSystem[this.currentDirectory]?.[name];
+                if (!file) {
+                    this.print(`cat: ${name}: No such file or directory`, 'error');
+                    return;
+                }
+
+                if (file.type !== 'file') {
+                    this.print(`cat: ${name}: Is a directory`, 'error');
+                    return;
+                }
+
+                this.print(file.content || '[Empty file]', 'output');
+            }
+
+            removeFile(name) {
+                if (!name) {
+                    this.print('rm: missing operand', 'error');
+                    return;
+                }
+
+                if (this.fileSystem[this.currentDirectory]?.[name]) {
+                    delete this.fileSystem[this.currentDirectory][name];
+                    this.print(`File '${name}' removed`, 'success');
+                } else {
+                    this.print(`rm: cannot remove '${name}': No such file or directory`, 'error');
+                }
+            }
+
+            // Calculator Commands
+            calculate(expression) {
+                if (!expression) {
+                    this.print('Usage: calc <mathematical expression>', 'error');
+                    return;
+                }
+
+                try {
+                    // Safe math evaluation
+                    const result = Function('"use strict"; return (' + expression.replace(/[^0-9+\-*/.() ]/g, '') + ')')();
+                    this.print(`${expression} = ${result}`, 'success');
+                } catch (error) {
+                    this.print(`Calculation error: ${error.message}`, 'error');
+                }
+            }
+
+            // Notes Commands
+            noteCommand(args) {
+                if (!args.length) {
+                    this.print('Usage: note [new|view|delete] <args>', 'error');
+                    return;
+                }
+
+                const action = args[0];
+                switch(action) {
+                    case 'new':
+                        const title = args.slice(1).join(' ');
+                        if (!title) {
+                            this.print('Usage: note new <title>', 'error');
+                            return;
+                        }
+                        const note = {
+                            id: Date.now(),
+                            title: title,
+                            content: '',
+                            created: new Date().toISOString()
+                        };
+                        this.notes.push(note);
+                        this.saveNotes();
+                        this.print(`Note created with ID: ${note.id}`, 'success');
+                        break;
+                    
+                    case 'view':
+                        const viewId = parseInt(args[1]);
+                        const viewNote = this.notes.find(n => n.id === viewId);
+                        if (!viewNote) {
+                            this.print(`Note ${viewId} not found`, 'error');
+                            return;
+                        }
+                        this.print(`=== ${viewNote.title} ===`, 'info');
+                        this.print(viewNote.content || '[Empty note]', 'output');
+                        this.print(`Created: ${new Date(viewNote.created).toLocaleString()}`, 'info');
+                        break;
+                    
+                    case 'delete':
+                        const deleteId = parseInt(args[1]);
+                        const index = this.notes.findIndex(n => n.id === deleteId);
+                        if (index === -1) {
+                            this.print(`Note ${deleteId} not found`, 'error');
+                            return;
+                        }
+                        this.notes.splice(index, 1);
+                        this.saveNotes();
+                        this.print(`Note ${deleteId} deleted`, 'success');
+                        break;
+                    
+                    default:
+                        this.print('Usage: note [new|view|delete] <args>', 'error');
+                }
+            }
+
+            listNotes() {
+                if (this.notes.length === 0) {
+                    this.print('No notes found', 'info');
+                    return;
+                }
+
+                this.print('=== NOTES ===', 'info');
+                this.notes.forEach(note => {
+                    this.print(`${note.id}: ${note.title} (${new Date(note.created).toLocaleDateString()})`, 'output');
+                });
+            }
+
+            saveNotes() {
+                localStorage.setItem('terminal_notes', JSON.stringify(this.notes));
+            }
+
+            // Weather Command
+            async getWeather(city) {
+                if (!city) {
+                    this.print('Usage: weather <city>', 'error');
+                    return;
+                }
+
+                this.print(`Fetching weather for ${city}...`, 'info');
+                
+                // Simulate weather API call
+                setTimeout(() => {
+                    const conditions = ['Sunny', 'Cloudy', 'Rainy', 'Snowy', 'Partly Cloudy'];
+                    const temp = Math.floor(Math.random() * 30) + 5;
+                    const condition = conditions[Math.floor(Math.random() * conditions.length)];
+                    
+                    this.print(`=== WEATHER: ${city.toUpperCase()} ===`, 'info');
+                    this.print(`Temperature: ${temp}°C`, 'output');
+                    this.print(`Condition: ${condition}`, 'output');
+                    this.print(`Humidity: ${Math.floor(Math.random() * 50) + 30}%`, 'output');
+                    this.print(`Wind: ${Math.floor(Math.random() * 20) + 5} km/h`, 'output');
+                }, 1000);
+            }
+
+            // System Monitor Commands
+            showProcesses() {
+                const processes = [
+                    'PID  TTY          TIME CMD',
+                    '1    ?        00:00:01 init',
+                    '42   ?        00:00:00 terminal-os',
+                    '99   pts/0    00:00:00 bash',
+                    '123  pts/0    00:00:00 gmail-sync',
+                    '156  pts/0    00:00:00 ai-assistant',
+                    '203  pts/0    00:00:00 file-manager',
+                    '267  pts/0    00:00:00 calculator'
+                ];
+                processes.forEach(proc => this.print(proc, 'output'));
+            }
+
+            showSystemInfo() {
+                const info = [
+                    'Terminal OS System Information',
+                    '=============================',
+                    `Hostname: ${this.hostname}`,
+                    `User: ${this.user}`,
+                    `Uptime: ${this.getUptime()}`,
+                    `Load: 0.24, 0.18, 0.12`,
+                    `Memory: 2.1GB / 8.0GB (26%)`,
+                    `Disk: 45.2GB / 256GB (18%)`,
+                    `Gmail: ${this.gmailConnected ? 'Connected' : 'Disconnected'}`,
+                    `AI Provider: ${CONFIG.ai.provider || 'Not configured'}`,
+                    `Active Apps: ${Object.values(AVAILABLE_APPS).filter(app => app.enabled).length}`,
+                    `Theme: ${CONFIG.system.theme}`,
+                    `Font Size: ${CONFIG.system.fontSize}px`
+                ];
+                info.forEach(line => this.print(line, 'info'));
+            }
+
+            showDiskUsage() {
+                const usage = [
+                    'Filesystem     Size  Used Avail Use% Mounted on',
+                    '/dev/sda1      256G   45G  211G  18% /',
+                    'tmpfs          4.0G     0  4.0G   0% /dev/shm',
+                    '/dev/sda2      100G   23G   77G  24% /home',
+                    '/dev/sda3       50G   12G   38G  24% /var'
+                ];
+                usage.forEach(line => this.print(line, 'output'));
+            }
+
+            showMemoryUsage() {
+                const memory = [
+                    '              total        used        free      shared  buff/cache   available',
+                    'Mem:           8192        2048        4096         256        2048        5888',
+                    'Swap:          4096           0        4096'
+                ];
+                memory.forEach(line => this.print(line, 'output'));
+            }
+
+            showSystemStatus() {
+                this.print('=== SYSTEM STATUS ===', 'info');
+                this.print(`Uptime: ${this.getUptime()}`, 'output');
+                this.print(`User: ${this.user}@${this.hostname}`, 'output');
+                this.print(`Directory: ${this.currentDirectory}`, 'output');
+                this.print(`Commands executed: ${this.commandHistory.length}`, 'output');
+                this.print(`AI Status: ${CONFIG.ai.provider ? 'Configured' : 'Not configured'}`, 'output');
+                this.print(`Gmail Status: ${this.gmailConnected ? 'Connected' : 'Disconnected'}`, 'output');
+                this.print(`Active apps: ${Object.values(AVAILABLE_APPS).filter(app => app.enabled).length}/${Object.keys(AVAILABLE_APPS).length}`, 'output');
+            }
+
+            // AI Integration
+            async askAI(message) {
+                if (!message) {
+                    this.print('Usage: ai <your question>', 'error');
+                    return;
+                }
+
+                if (!CONFIG.ai.provider || !CONFIG.ai.apiKey) {
+                    this.print('AI not configured. Use "settings" to configure AI provider.', 'error');
+                    return;
+                }
+
+                this.print(`Asking AI: ${message}`, 'info');
+                this.print('AI is thinking...', 'loading');
+
+                try {
+                    const response = await this.callAI(message);
+                    this.print(response, 'ai-response');
+                } catch (error) {
+                    this.print(`AI Error: ${error.message}`, 'error');
+                }
+            }
+
+            async callAI(message) {
+                const { provider, apiKey, model, maxTokens } = CONFIG.ai;
+
+                switch(provider) {
+                    case 'openai':
+                        return await this.callOpenAI(message, apiKey, model, maxTokens);
+                    case 'anthropic':
+                        return await this.callAnthropic(message, apiKey, model, maxTokens);
+                    case 'google':
+                        return await this.callGoogle(message, apiKey, model, maxTokens);
+                    case 'ollama':
+                        return await this.callOllama(message, model, maxTokens);
+                    default:
+                        throw new Error('Unknown AI provider');
+                }
+            }
+
+            async callOpenAI(message, apiKey, model, maxTokens) {
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: model || 'gpt-3.5-turbo',
+                        messages: [{ role: 'user', content: message }],
+                        max_tokens: maxTokens,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`OpenAI API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content;
+            }
+
+            async callAnthropic(message, apiKey, model, maxTokens) {
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': apiKey,
+                        'anthropic-version': '2023-06-01'
+                    },
+                    body: JSON.stringify({
+                        model: model || 'claude-3-sonnet-20240229',
+                        max_tokens: maxTokens,
+                        messages: [{ role: 'user', content: message }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Anthropic API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.content[0].text;
+            }
+
+            async callGoogle(message, apiKey, model, maxTokens) {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-pro'}:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: message }] }],
+                        generationConfig: {
+                            maxOutputTokens: maxTokens,
+                            temperature: 0.7
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Google AI API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+            }
+
+            async callOllama(message, model, maxTokens) {
+                const response = await fetch('http://localhost:11434/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: model || 'llama2',
+                        prompt: message,
+                        stream: false
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Ollama API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.response;
+            }
+
+            // Gmail Integration
+            async connectGmail() {
+                if (!CONFIG.google.clientId || !CONFIG.google.apiKey) {
+                    this.print('Gmail not configured. Use "settings" to add Google credentials.', 'error');
+                    return;
+                }
+
+                this.print('Connecting to Gmail...', 'info');
+                this.assistant.updateStatus('Connecting to Gmail...');
+
+                try {
+                    await this.initGmailAuth();
+                    const authInstance = gapi.auth2.getAuthInstance();
+                    const user = await authInstance.signIn();
+                    
+                    if (user.isSignedIn()) {
+                        this.gmailConnected = true;
+                        const profile = user.getBasicProfile();
+                        this.print(`Gmail connected successfully!`, 'success');
+                        this.print(`Logged in as: ${profile.getEmail()}`, 'success');
+                        this.assistant.updateStatus('Gmail connected');
+                    }
+                } catch (error) {
+                    this.print(`Gmail connection failed: ${error.message}`, 'error');
+                    this.assistant.updateStatus('Gmail connection failed');
+                }
+            }
+
+            async disconnectGmail() {
+                if (!this.gmailConnected) {
+                    this.print('Gmail not connected', 'error');
+                    return;
+                }
+
+                try {
+                    await gapi.auth2.getAuthInstance().signOut();
+                    this.gmailConnected = false;
+                    this.print('Gmail disconnected', 'success');
+                    this.assistant.updateStatus('Gmail disconnected');
+                } catch (error) {
+                    this.print(`Error disconnecting: ${error.message}`, 'error');
+                }
+            }
+
+            async gmailCommand(args) {
+                if (!this.gmailConnected) {
+                    this.print('Gmail not connected. Use "connect" first.', 'error');
+                    return;
+                }
+
+                if (!args.length) {
+                    this.print('Usage: gmail [inbox|unread|count]', 'error');
+                    return;
+                }
+
+                const command = args[0].toLowerCase();
+                this.assistant.updateStatus(`Fetching Gmail ${command}...`);
+
+                try {
+                    switch(command) {
+                        case 'inbox':
+                            await this.fetchInbox();
+                            break;
+                        case 'unread':
+                            await this.fetchUnreadMessages();
+                            break;
+                        case 'count':
+                            await this.getMessageCounts();
+                            break;
+                        default:
+                            this.print(`Unknown Gmail command: ${command}`, 'error');
+                    }
+                } catch (error) {
+                    this.print(`Gmail error: ${error.message}`, 'error');
+                }
+                
+                this.assistant.updateStatus('Ready');
+            }
+
+            async fetchInbox(limit = 5) {
+                const response = await gapi.client.gmail.users.messages.list({
+                    userId: 'me',
+                    maxResults: limit
+                });
+
+                this.print(`=== INBOX (${limit} most recent) ===`, 'info');
+                
+                if (!response.result.messages) {
+                    this.print('No messages found', 'info');
+                    return;
+                }
+
+                for (const message of response.result.messages) {
+                    const details = await gapi.client.gmail.users.messages.get({
+                        userId: 'me',
+                        id: message.id,
+                        format: 'metadata',
+                        metadataHeaders: ['From', 'Subject', 'Date']
+                    });
+
+                    const headers = details.result.payload.headers;
+                    const from = headers.find(h => h.name === 'From')?.value || 'Unknown';
+                    const subject = headers.find(h => h.name === 'Subject')?.value || 'No Subject';
+                    const date = new Date(headers.find(h => h.name === 'Date')?.value).toLocaleDateString();
+
+                    this.print(`From: ${from.substring(0, 40)}...`, 'output');
+                    this.print(`Subject: ${subject.substring(0, 50)}...`, 'output');
+                    this.print(`Date: ${date}`, 'output');
+                    this.print('─'.repeat(50), 'info');
+                }
+            }
+
+            async fetchUnreadMessages() {
+                const response = await gapi.client.gmail.users.messages.list({
+                    userId: 'me',
+                    q: 'is:unread',
+                    maxResults: 10
+                });
+
+                const count = response.result.messages?.length || 0;
+                this.print(`=== UNREAD MESSAGES (${count}) ===`, 'info');
+
+                if (count === 0) {
+                    this.print('No unread messages', 'success');
+                    return;
+                }
+
+                for (const message of response.result.messages) {
+                    const details = await gapi.client.gmail.users.messages.get({
+                        userId: 'me',
+                        id: message.id,
+                        format: 'metadata',
+                        metadataHeaders: ['From', 'Subject']
+                    });
+
+                    const headers = details.result.payload.headers;
+                    const from = headers.find(h => h.name === 'From')?.value || 'Unknown';
+                    const subject = headers.find(h => h.name === 'Subject')?.value || 'No Subject';
+
+                    this.print(`• ${from.split('<')[0].trim()}: ${subject.substring(0, 40)}...`, 'output');
+                }
+            }
+
+            async getMessageCounts() {
+                const profile = await gapi.client.gmail.users.getProfile({ userId: 'me' });
+                
+                this.print('=== GMAIL STATISTICS ===', 'info');
+                this.print(`Total Messages: ${profile.result.messagesTotal}`, 'output');
+                this.print(`Total Threads: ${profile.result.threadsTotal}`, 'output');
+                this.print(`History ID: ${profile.result.historyId}`, 'output');
+            }
+
+            async initGmailAuth() {
+                if (!this.gmailAuth) {
+                    await new Promise((resolve) => {
+                        gapi.load('client:auth2', resolve);
+                    });
+                    
+                    await gapi.client.init({
+                        apiKey: CONFIG.google.apiKey,
+                        clientId: CONFIG.google.clientId,
+                        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest'],
+                        scope: 'https://www.googleapis.com/auth/gmail.readonly'
+                    });
+                    
+                    this.gmailAuth = gapi.auth2.getAuthInstance();
+                }
+            }
+
+            // Assistant Commands
+            assistantCommand(args) {
+                if (!args.length) {
+                    this.print('Usage: assistant [show|hide|status]', 'error');
+                    return;
+                }
+
+                switch(args[0]) {
+                    case 'show':
+                        showAssistant();
+                        this.print('AI Assistant panel displayed', 'success');
+                        break;
+                    case 'hide':
+                        hideAssistant();
+                        this.print('AI Assistant panel hidden', 'success');
+                        break;
+                    case 'status':
+                        this.print(this.assistant.getStatus(), 'info');
+                        break;
+                    default:
+                        this.print('Usage: assistant [show|hide|status]', 'error');
+                }
+            }
+
+            // Fun Commands
+            matrixEffect() {
+                this.print('Entering the Matrix...', 'success');
+                let count = 0;
+                const chars = '0123456789ABCDEF';
+                const interval = setInterval(() => {
+                    let line = '';
+                    for (let i = 0; i < 60; i++) {
+                        line += chars[Math.floor(Math.random() * chars.length)];
+                    }
+                    this.print(line, 'success');
+                    count++;
+                    if (count > 8) {
+                        clearInterval(interval);
+                        this.print('Matrix effect complete.', 'info');
+                    }
+                }, 150);
+            }
+
+            cowsay(text) {
+                if (!text) text = 'Hello from Terminal OS!';
+                const cow = `
+ ${'-'.repeat(text.length + 2)}
+< ${text} >
+ ${'-'.repeat(text.length + 2)}
+        \\   ^__^
+         \\  (oo)\\_______
+            (__)\\       )\\/\\
+                ||----w |
+                ||     ||`;
+                this.print(cow, 'info');
+            }
+
+            fortune() {
+                const fortunes = [
+                    "The best way to predict the future is to implement it.",
+                    "A computer without COBOL and Fortran is like chocolate cake without ketchup.",
+                    "There are only two hard things in Computer Science: cache invalidation and naming things.",
+                    "Any fool can write code that a computer can understand. Good programmers write code that humans can understand.",
+                    "Experience is the name everyone gives to their mistakes.",
+                    "In theory, theory and practice are the same. In practice, they're not.",
+                    "The most effective debugging tool is still careful thought, coupled with judiciously placed print statements."
+                ];
+                const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+                this.print(`🔮 ${fortune}`, 'info');
+            }
+
+            figlet(text) {
+                if (!text) text = 'TERMINAL OS';
+                // Simple ASCII art generator
+                const ascii = text.toUpperCase().split('').map(char => {
+                    switch(char) {
+                        case 'A': return ['██████', '██  ██', '██████', '██  ██', '██  ██'];
+                        case 'B': return ['██████', '██  ██', '██████', '██  ██', '██████'];
+                        case 'C': return ['██████', '██    ', '██    ', '██    ', '██████'];
+                        default: return ['██████', '██  ██', '██  ██', '██  ██', '██████'];
+                    }
+                }).reduce((acc, curr) => {
+                    curr.forEach((line, i) => {
+                        acc[i] = (acc[i] || '') + line + '  ';
+                    });
+                    return acc;
+                }, []);
+                
+                ascii.forEach(line => this.print(line, 'success'));
+            }
+
+            // Settings and Configuration
+            openSettings() {
+                this.loadSettingsValues();
+                document.getElementById('settings-panel').style.display = 'flex';
+                this.print('Settings panel opened', 'info');
+            }
+
+            loadSettings() {
+                // Load all settings from localStorage
+                this.loadSettingsValues();
+                this.loadApps();
+                this.applyTheme();
+            }
+
+            loadSettingsValues() {
+                // Load AI settings
+                document.getElementById('ai-provider').value = CONFIG.ai.provider;
+                document.getElementById('ai-api-key').value = CONFIG.ai.apiKey;
+                document.getElementById('ai-model').value = CONFIG.ai.model;
+                document.getElementById('ai-max-tokens').value = CONFIG.ai.maxTokens;
+
+                // Load Google settings
+                document.getElementById('google-client-id').value = CONFIG.google.clientId;
+                document.getElementById('google-api-key').value = CONFIG.google.apiKey;
+
+                // Load system settings
+                document.getElementById('theme-selector').value = CONFIG.system.theme;
+                document.getElementById('font-size').value = CONFIG.system.fontSize;
+                document.getElementById('font-size-value').textContent = CONFIG.system.fontSize + 'px';
+                document.getElementById('history-limit').value = CONFIG.system.historyLimit;
+
+                // Load apps
+                this.renderAppGrid();
+            }
+
+            renderAppGrid() {
+                const grid = document.getElementById('app-grid');
+                grid.innerHTML = '';
+
+                Object.entries(AVAILABLE_APPS).forEach(([key, app]) => {
+                    const appDiv = document.createElement('div');
+                    appDiv.className = `app-item ${app.enabled ? 'enabled' : ''}`;
+                    appDiv.innerHTML = `
+                        <h4>${app.name}</h4>
+                        <p>${app.description}</p>
+                        <p>Commands: ${app.commands.join(', ')}</p>
+                        <button class="app-toggle ${app.enabled ? '' : 'disabled'}" onclick="toggleApp('${key}')">
+                            ${app.enabled ? 'Disable' : 'Enable'}
+                        </button>
+                    `;
+                    grid.appendChild(appDiv);
+                });
+            }
+
+            applyTheme() {
+                const root = document.documentElement;
+                
+                switch(CONFIG.system.theme) {
+                    case 'amber':
+                        root.style.setProperty('--primary-green', '#ffaa00');
+                        root.style.setProperty('--dark-green', '#cc8800');
+                        break;
+                    case 'cyan':
+                        root.style.setProperty('--primary-green', '#00ffff');
+                        root.style.setProperty('--dark-green', '#00cccc');
+                        break;
+                    case 'white':
+                        root.style.setProperty('--primary-green', '#ffffff');
+                        root.style.setProperty('--dark-green', '#cccccc');
+                        break;
+                    default: // green
+                        root.style.setProperty('--primary-green', '#00ff00');
+                        root.style.setProperty('--dark-green', '#00cc00');
+                }
+
+                document.body.style.fontSize = CONFIG.system.fontSize + 'px';
+            }
+
+            // System management
+            logout() {
+                this.print('Logging out...', 'warning');
+                setTimeout(() => {
+                    document.getElementById('main-interface').classList.add('hidden');
+                    document.getElementById('login-screen').classList.remove('hidden');
+                    document.getElementById('password-input').focus();
+                }, 1000);
+            }
+
+            clearTerminal() {
+                document.getElementById('terminal-output').innerHTML = '';
+            }
+
+            print(text, type = 'output') {
+                const output = document.getElementById('terminal-output');
+                const line = document.createElement('div');
+                line.className = `terminal-line ${type}`;
+                line.textContent = text;
+                output.appendChild(line);
+                output.scrollTop = output.scrollHeight;
+            }
+
+            updatePrompt() {
+                const promptElement = document.getElementById('terminal-prompt');
+                promptElement.textContent = this.getPrompt();
+            }
+
+            getPrompt() {
+                const dir = this.currentDirectory.replace('/home/admin', '~');
+                return `${this.user}@${this.hostname}:${dir}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal OS - Secure Command Interface</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https: wss:;">
+    
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-green: #00ff00;
+            --dark-green: #00cc00;
+            --bg-black: #000000;
+            --terminal-bg: #0a0a0a;
+            --text-shadow: 0 0 5px var(--primary-green);
+            --font-terminal: 'Courier New', 'Monaco', 'Menlo', monospace;
+            --red: #ff4444;
+            --yellow: #ffff00;
+            --blue: #4444ff;
+            --cyan: #44ffff;
+        }
+
+        body {
+            background: var(--bg-black);
+            color: var(--primary-green);
+            font-family: var(--font-terminal);
+            font-size: 14px;
+            line-height: 1.4;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Login Screen */
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-black);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .login-container {
+            text-align: center;
+            padding: 40px;
+            border: 2px solid var(--primary-green);
+            border-radius: 10px;
+            background: var(--terminal-bg);
+            box-shadow: var(--text-shadow);
+        }
+
+        .login-container h1 {
+            font-size: 28px;
+            margin-bottom: 30px;
+            text-shadow: var(--text-shadow);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .login-input {
+            background: transparent;
+            border: 1px solid var(--dark-green);
+            color: var(--primary-green);
+            font-family: var(--font-terminal);
+            font-size: 16px;
+            padding: 10px 15px;
+            margin: 10px 0;
+            width: 300px;
+            text-align: center;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: var(--text-shadow);
+        }
+
+        .login-button {
+            background: var(--primary-green);
+            color: var(--bg-black);
+            border: none;
+            padding: 12px 30px;
+            font-family: var(--font-terminal);
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .login-button:hover {
+            background: var(--dark-green);
+        }
+
+        .login-error {
+            color: var(--red);
+            margin-top: 15px;
+            font-size: 12px;
+        }
+
+        /* Logo */
+        .logo {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 60px;
+            height: 60px;
+            background: var(--primary-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--bg-black);
+            box-shadow: var(--text-shadow);
+            border: 2px solid var(--primary-green);
+        }
+
+        /* Main Terminal Container */
+        .terminal-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            padding-right: 100px;
+        }
+
+        /* Terminal Header */
+        .terminal-header {
+            margin-bottom: 20px;
+            text-shadow: var(--text-shadow);
+        }
+
+        .terminal-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 5px var(--primary-green); }
+            to { text-shadow: 0 0 20px var(--primary-green), 0 0 30px var(--primary-green); }
+        }
+
+        /* Terminal Output Area */
+        .terminal-output {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: var(--terminal-bg);
+            border: 1px solid var(--dark-green);
+            border-radius: 3px;
+            font-size: 13px;
+        }
+
+        .terminal-line {
+            margin-bottom: 5px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .prompt {
+            color: var(--primary-green);
+            text-shadow: var(--text-shadow);
+        }
+
+        .command {
+            color: var(--primary-green);
+        }
+
+        .output {
+            color: #cccccc;
+            margin-left: 20px;
+        }
+
+        .error {
+            color: var(--red);
+        }
+
+        .success {
+            color: var(--primary-green);
+            text-shadow: var(--text-shadow);
+        }
+
+        .info {
+            color: var(--blue);
+        }
+
+        .warning {
+            color: var(--yellow);
+        }
+
+        .ai-response {
+            color: var(--cyan);
+            border-left: 3px solid var(--cyan);
+            padding-left: 10px;
+            margin: 10px 0;
+            background: rgba(68, 255, 255, 0.05);
+        }
+
+        /* Terminal Input */
+        .terminal-input-container {
+            display: flex;
+            align-items: center;
+            background: var(--terminal-bg);
+            border: 1px solid var(--dark-green);
+            border-radius: 3px;
+            padding: 8px;
+        }
+
+        .terminal-prompt {
+            color: var(--primary-green);
+            margin-right: 10px;
+            text-shadow: var(--text-shadow);
+            flex-shrink: 0;
+        }
+
+        .terminal-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--primary-green);
+            font-family: var(--font-terminal);
+            font-size: 14px;
+            outline: none;
+            caret-color: var(--primary-green);
+        }
+
+        /* AI Assistant Panel */
+        .assistant-panel {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            width: 350px;
+            height: 450px;
+            background: var(--terminal-bg);
+            border: 2px solid var(--cyan);
+            border-radius: 5px;
+            display: none;
+            flex-direction: column;
+            z-index: 500;
+            box-shadow: 0 0 20px rgba(68, 255, 255, 0.3);
+        }
+
+        .assistant-header {
+            background: var(--cyan);
+            color: var(--bg-black);
+            padding: 8px 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .assistant-close {
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--bg-black);
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .assistant-content {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+
+        .assistant-input {
+            display: flex;
+            padding: 8px;
+            border-top: 1px solid var(--cyan);
+        }
+
+        .assistant-input input {
+            flex: 1;
+            background: transparent;
+            border: 1px solid var(--cyan);
+            color: var(--primary-green);
+            font-family: var(--font-terminal);
+            font-size: 12px;
+            padding: 5px;
+        }
+
+        .assistant-input button {
+            background: var(--cyan);
+            color: var(--bg-black);
+            border: none;
+            padding: 5px 10px;
+            margin-left: 5px;
+            cursor: pointer;
+            font-family: var(--font-terminal);
+            font-size: 12px;
+        }
+
+        .assistant-status {
+            padding: 8px 12px;
+            background: rgba(68, 255, 255, 0.1);
+            border-top: 1px solid var(--cyan);
+            font-size: 11px;
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            position: fixed;
+            top: 50px;
+            left: 50px;
+            right: 50px;
+            bottom: 50px;
+            background: var(--terminal-bg);
+            border: 2px solid var(--yellow);
+            border-radius: 5px;
+            display: none;
+            flex-direction: column;
+            z-index: 600;
+            box-shadow: 0 0 30px rgba(255, 255, 0, 0.3);
+        }
+
+        .settings-header {
+            background: var(--yellow);
+            color: var(--bg-black);
+            padding: 12px 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .settings-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .settings-section {
+            margin-bottom: 30px;
+            border: 1px solid var(--dark-green);
+            border-radius: 5px;
+            padding: 15px;
+        }
+
+        .settings-section h3 {
+            color: var(--primary-green);
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .settings-item {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .settings-label {
+            color: #cccccc;
+            flex: 1;
+        }
+
+        .settings-input, .settings-select {
+            background: transparent;
+            border: 1px solid var(--dark-green);
+            color: var(--primary-green);
+            font-family: var(--font-terminal);
+            font-size: 12px;
+            padding: 5px 10px;
+            width: 200px;
+        }
+
+        .settings-button {
+            background: var(--primary-green);
+            color: var(--bg-black);
+            border: none;
+            padding: 8px 15px;
+            font-family: var(--font-terminal);
+            font-size: 12px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .settings-button:hover {
+            background: var(--dark-green);
+        }
+
+        /* App Grid */
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .app-item {
+            border: 1px solid var(--dark-green);
+            padding: 10px;
+            border-radius: 3px;
+            background: rgba(0, 255, 0, 0.05);
+        }
+
+        .app-item.enabled {
+            border-color: var(--primary-green);
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        .app-item h4 {
+            color: var(--primary-green);
+            margin-bottom: 5px;
+        }
+
+        .app-item p {
+            color: #cccccc;
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+
+        .app-toggle {
+            background: var(--primary-green);
+            color: var(--bg-black);
+            border: none;
+            padding: 5px 10px;
+            font-family: var(--font-terminal);
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .app-toggle.disabled {
+            background: var(--red);
+        }
+
+        /* Loading Animation */
+        .loading {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .terminal-container {
+                padding: 10px;
+                padding-right: 80px;
+            }
+
+            .logo {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+                top: 10px;
+                right: 10px;
+            }
+
+            .assistant-panel {
+                width: 300px;
+                height: 400px;
+                top: 80px;
+                right: 10px;
+            }
+
+            .settings-panel {
+                top: 20px;
+                left: 20px;
+                right: 20px;
+                bottom: 20px;
+            }
+
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                font-size: 12px;
+            }
+
+            .login-input {
+                width: 250px;
+            }
+
+            .terminal-container {
+                padding: 5px;
+                padding-right: 60px;
+            }
+
+            .assistant-panel {
+                width: calc(100vw - 20px);
+                height: 350px;
+                right: 10px;
+                left: 10px;
+                top: 70px;
+            }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-black);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--dark-green);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-green);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="login-screen">
+        <div class="login-container">
+            <h1>TERMINAL OS</h1>
+            <div>SECURE ACCESS REQUIRED</div>
+            <input type="password" class="login-input" id="password-input" placeholder="Enter Password" autofocus>
+            <div class="login-error" id="login-error"></div>
+            <button class="login-button" onclick="attemptLogin()">ACCESS SYSTEM</button>
+            <div style="margin-top: 20px; font-size: 10px; color: #666;">
+                Default password: sebas123
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Interface (Hidden initially) -->
+    <div id="main-interface" class="hidden">
+        <!-- Logo -->
+        <div class="logo">C</div>
+
+        <!-- Terminal Container -->
+        <div class="terminal-container">
+            <!-- Terminal Header -->
+            <div class="terminal-header">
+                <h1>TERMINAL OS v3.0.0 - SECURE MODE</h1>
+                <div>System Ready - Type 'help' for commands</div>
+            </div>
+
+            <!-- Terminal Output -->
+            <div class="terminal-output" id="terminal-output"></div>
+
+            <!-- Terminal Input -->
+            <div class="terminal-input-container">
+                <span class="terminal-prompt" id="terminal-prompt">admin@terminal-os:~$</span>
+                <input type="text" class="terminal-input" id="terminal-input" autofocus autocomplete="off">
+            </div>
+        </div>
+
+        <!-- AI Assistant Panel -->
+        <div class="assistant-panel" id="assistant-panel">
+            <div class="assistant-header">
+                <span>🤖 AI Assistant</span>
+                <button class="assistant-close" onclick="toggleAssistant()">&times;</button>
+            </div>
+            <div class="assistant-content" id="assistant-content"></div>
+            <div class="assistant-input">
+                <input type="text" id="ai-input" placeholder="Ask AI anything..." onkeypress="handleAIInput(event)">
+                <button onclick="sendToAI()">Send</button>
+            </div>
+            <div class="assistant-status" id="assistant-status">
+                Status: Ready | Provider: Not configured | Uptime: 00:00:00
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div class="settings-panel" id="settings-panel">
+            <div class="settings-header">
+                <span>⚙️ System Configuration</span>
+                <button class="assistant-close" onclick="toggleSettings()">&times;</button>
+            </div>
+            <div class="settings-content">
+                <!-- Security Settings -->
+                <div class="settings-section">
+                    <h3>🔐 Security Settings</h3>
+                    <div class="settings-item">
+                        <span class="settings-label">Current Password:</span>
+                        <input type="password" class="settings-input" id="current-password" placeholder="Enter current password">
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">New Password:</span>
+                        <input type="password" class="settings-input" id="new-password" placeholder="Enter new password">
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Confirm Password:</span>
+                        <input type="password" class="settings-input" id="confirm-password" placeholder="Confirm new password">
+                    </div>
+                    <button class="settings-button" onclick="changePassword()">Change Password</button>
+                </div>
+
+                <!-- AI Configuration -->
+                <div class="settings-section">
+                    <h3>🤖 AI Configuration</h3>
+                    <div class="settings-item">
+                        <span class="settings-label">AI Provider:</span>
+                        <select class="settings-select" id="ai-provider">
+                            <option value="">Select Provider</option>
+                            <option value="openai">OpenAI (GPT-4)</option>
+                            <option value="anthropic">Anthropic (Claude)</option>
+                            <option value="google">Google (Gemini)</option>
+                            <option value="ollama">Ollama (Local)</option>
+                        </select>
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">API Key:</span>
+                        <input type="password" class="settings-input" id="ai-api-key" placeholder="Enter API key">
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Model:</span>
+                        <input type="text" class="settings-input" id="ai-model" placeholder="e.g., gpt-4, claude-3">
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Max Tokens:</span>
+                        <input type="number" class="settings-input" id="ai-max-tokens" value="150" min="50" max="2000">
+                    </div>
+                    <button class="settings-button" onclick="saveAIConfig()">Save AI Config</button>
+                    <button class="settings-button" onclick="testAI()">Test AI</button>
+                </div>
+
+                <!-- Gmail Settings -->
+                <div class="settings-section">
+                    <h3>📧 Gmail Configuration</h3>
+                    <div class="settings-item">
+                        <span class="settings-label">Google Client ID:</span>
+                        <input type="text" class="settings-input" id="google-client-id" placeholder="Enter Google OAuth Client ID">
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Google API Key:</span>
+                        <input type="password" class="settings-input" id="google-api-key" placeholder="Enter Google API Key">
+                    </div>
+                    <button class="settings-button" onclick="saveGoogleConfig()">Save Gmail Config</button>
+                </div>
+
+                <!-- App Management -->
+                <div class="settings-section">
+                    <h3>📱 App Management</h3>
+                    <div class="app-grid" id="app-grid"></div>
+                </div>
+
+                <!-- System Settings -->
+                <div class="settings-section">
+                    <h3>💻 System Settings</h3>
+                    <div class="settings-item">
+                        <span class="settings-label">Terminal Theme:</span>
+                        <select class="settings-select" id="theme-selector">
+                            <option value="green">Matrix Green</option>
+                            <option value="amber">Amber</option>
+                            <option value="cyan">Cyan</option>
+                            <option value="white">White</option>
+                        </select>
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Font Size:</span>
+                        <input type="range" class="settings-input" id="font-size" min="10" max="20" value="14">
+                        <span id="font-size-value">14px</span>
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Command History Limit:</span>
+                        <input type="number" class="settings-input" id="history-limit" value="100" min="10" max="1000">
+                    </div>
+                    <button class="settings-button" onclick="saveSystemSettings()">Save Settings</button>
+                    <button class="settings-button" onclick="resetSystem()">Reset to Defaults</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google APIs -->
+    <script src="https://apis.google.com/js/api.js"></script>
+
+    <script>
+        /**
+         * TERMINAL OS v3.0.0 - Complete Functional Version
+         * Features: Password Protection, Real AI Integration, App Management, Gmail, Settings
+         */
+
+        // Global configuration object
+        const CONFIG = {
+            password: localStorage.getItem('terminal_password') || 'sebas123',
+            ai: {
+                provider: localStorage.getItem('ai_provider') || '',
+                apiKey: localStorage.getItem('ai_api_key') || '',
+                model: localStorage.getItem('ai_model') || '',
+                maxTokens: parseInt(localStorage.getItem('ai_max_tokens')) || 150
+            },
+            google: {
+                clientId: localStorage.getItem('google_client_id') || '',
+                apiKey: localStorage.getItem('google_api_key') || ''
+            },
+            system: {
+                theme: localStorage.getItem('system_theme') || 'green',
+                fontSize: parseInt(localStorage.getItem('system_font_size')) || 14,
+                historyLimit: parseInt(localStorage.getItem('system_history_limit')) || 100
+            },
+            apps: JSON.parse(localStorage.getItem('enabled_apps') || '{"gmail":true,"calculator":true,"filemanager":true,"notes":true,"system":true,"weather":false}')
+        };
+
+        // Available applications
+        const AVAILABLE_APPS = {
+            gmail: {
+                name: 'Gmail Integration',
+                description: 'Read emails, check inbox, manage messages',
+                enabled: CONFIG.apps.gmail || false,
+                commands: ['gmail', 'inbox', 'unread', 'connect']
+            },
+            calculator: {
+                name: 'Calculator',
+                description: 'Perform mathematical calculations',
+                enabled: CONFIG.apps.calculator || false,
+                commands: ['calc', 'math']
+            },
+            filemanager: {
+                name: 'File Manager',
+                description: 'Browse and manage files (simulated)',
+                enabled: CONFIG.apps.filemanager || false,
+                commands: ['ls', 'cd', 'mkdir', 'rm', 'cat', 'touch']
+            },
+            weather: {
+                name: 'Weather App',
+                description: 'Get weather information for any city',
+                enabled: CONFIG.apps.weather || false,
+                commands: ['weather']
+            },
+            notes: {
+                name: 'Notes App',
+                description: 'Create and manage text notes',
+                enabled: CONFIG.apps.notes || false,
+                commands: ['note', 'notes', 'save-note']
+            },
+            system: {
+                name: 'System Monitor',
+                description: 'Monitor system resources and processes',
+                enabled: CONFIG.apps.system || false,
+                commands: ['htop', 'ps', 'df', 'free', 'uptime']
+            }
+        };
+
+        /**
+         * Authentication System
+         */
+        function attemptLogin() {
+            const passwordInput = document.getElementById('password-input');
+            const errorDiv = document.getElementById('login-error');
+            const password = passwordInput.value;
+
+            if (password === CONFIG.password) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-interface').classList.remove('hidden');
+                initializeTerminal();
+                errorDiv.textContent = '';
+            } else {
+                errorDiv.textContent = 'Invalid password. Please try again.';
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        }
+
+        // Handle Enter key on login
+        document.addEventListener('DOMContentLoaded', () => {
+            const passwordInput = document.getElementById('password-input');
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    attemptLogin();
+                }
+            });
+        });
+
+        /**
+         * Main Terminal OS Class
+         */
+        class TerminalOS {
+            constructor() {
+                this.commandHistory = [];
+                this.historyIndex = -1;
+                this.currentDirectory = '/home/admin';
+                this.user = 'admin';
+                this.hostname = 'terminal-os';
+                this.modules = {};
+                this.assistant = null;
+                this.fileSystem = this.initFileSystem();
+                this.notes = JSON.parse(localStorage.getItem('terminal_notes') || '[]');
+                this.startTime = new Date();
+                
+                // Gmail integration
+                this.gmailAuth = null;
+                this.gmailConnected = false;
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.initializeModules();
+                this.initializeAssistant();
+                this.updatePrompt();
+                this.applyTheme();
+                this.loadSettings();
+                this.showWelcomeMessage();
+            }
+
+            initFileSystem() {
+                return {
+                    '/home/admin': {
+                        'documents': { type: 'directory' },
+                        'downloads': { type: 'directory' },
+                        'projects': { type: 'directory' },
+                        'readme.txt': { type: 'file', content: 'Welcome to Terminal OS!' },
+                        'config.sys': { type: 'file', content: 'System configuration file' }
+                    }
+                };
+            }
+
+            showWelcomeMessage() {
+                this.print('System boot sequence complete.', 'success');
+                this.print('Welcome to Terminal OS v3.0.0 - Secure Mode', 'success');
+                this.print('Type "help" to see available commands.', 'info');
+                this.print('Type "settings" to configure AI and apps.', 'info');
+                this.print('Type "assistant show" to display AI assistant.', 'info');
+                this.print('─'.repeat(60), 'info');
+            }
+
+            setupEventListeners() {
+                const input = document.getElementById('terminal-input');
+                
+                input.addEventListener('keydown', (e) => {
+                    switch(e.key) {
+                        case 'Enter':
+                            this.executeCommand(input.value.trim());
+                            input.value = '';
+                            break;
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            this.navigateHistory(-1);
+                            break;
+                        case 'ArrowDown':
+                            e.preventDefault();
+                            this.navigateHistory(1);
+                            break;
+                        case 'Tab':
+                            e.preventDefault();
+                            this.autoComplete(input.value);
+                            break;
+                    }
+                });
+
+                // Keep input focused
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.settings-panel') && !e.target.closest('.assistant-panel')) {
+                        input.focus();
+                    }
+                });
+            }
+
+            navigateHistory(direction) {
+                const input = document.getElementById('terminal-input');
+                
+                if (direction === -1 && this.historyIndex < this.commandHistory.length - 1) {
+                    this.historyIndex++;
+                } else if (direction === 1 && this.historyIndex > 0) {
+                    this.historyIndex--;
+                } else if (direction === 1 && this.historyIndex === 0) {
+                    this.historyIndex = -1;
+                    input.value = '';
+                    return;
+                }
+
+                if (this.historyIndex >= 0) {
+                    input.value = this.commandHistory[this.commandHistory.length - 1 - this.historyIndex];
+                }
+            }
+
+            autoComplete(partial) {
+                const commands = Object.keys(this.getAvailableCommands());
+                const matches = commands.filter(cmd => cmd.startsWith(partial));
+                
+                if (matches.length === 1) {
+                    document.getElementById('terminal-input').value = matches[0];
+                } else if (matches.length > 1) {
+                    this.print(`Possible commands: ${matches.join(', ')}`, 'info');
+                }
+            }
+
+            executeCommand(commandLine) {
+                if (!commandLine) return;
+                
+                // Add to history
+                this.commandHistory.push(commandLine);
+                if (this.commandHistory.length > CONFIG.system.historyLimit) {
+                    this.commandHistory.shift();
+                }
+                this.historyIndex = -1;
+                
+                // Display command
+                this.print(`${this.getPrompt()} ${commandLine}`, 'command');
+                
+                // Parse command
+                const parts = commandLine.split(' ');
+                const command = parts[0].toLowerCase();
+                const args = parts.slice(1);
+                
+                // Log to assistant
+                this.assistant.logCommand(commandLine);
+                
+                // Execute
+                this.runCommand(command, args);
+            }
+
+            runCommand(command, args) {
+                const commands = this.getAvailableCommands();
+                
+                if (commands[command]) {
+                    try {
+                        commands[command](args);
+                    } catch (error) {
+                        this.print(`Error executing command: ${error.message}`, 'error');
+                    }
+                } else {
+                    this.print(`Command not found: ${command}. Type 'help' for available commands.`, 'error');
+                }
+            }
+
+            getAvailableCommands() {
+                const baseCommands = {
+                    // Core commands
+                    help: () => this.showHelp(),
+                    clear: () => this.clearTerminal(),
+                    cls: () => this.clearTerminal(),
+                    whoami: () => this.print(this.user),
+                    pwd: () => this.print(this.currentDirectory),
+                    date: () => this.print(new Date().toString()),
+                    uptime: () => this.print(`System uptime: ${this.getUptime()}`),
+                    exit: () => this.logout(),
+                    logout: () => this.logout(),
+                    
+                    // Settings and configuration
+                    settings: () => this.openSettings(),
+                    config: () => this.openSettings(),
+                    
+                    // AI Assistant commands
+                    assistant: (args) => this.assistantCommand(args),
+                    ai: (args) => this.askAI(args.join(' ')),
+                    
+                    // System information
+                    version: () => this.print('Terminal OS v3.0.0 - Secure Mode'),
+                    status: () => this.showSystemStatus(),
+                    
+                    // Fun commands
+                    matrix: () => this.matrixEffect(),
+                    cowsay: (args) => this.cowsay(args.join(' ')),
+                    fortune: () => this.fortune(),
+                    figlet: (args) => this.figlet(args.join(' '))
+                };
+
+                // Add app-specific commands based on enabled apps
+                const appCommands = this.getAppCommands();
+                return { ...baseCommands, ...appCommands };
+            }
+
+            getAppCommands() {
+                const commands = {};
+
+                if (AVAILABLE_APPS.gmail.enabled) {
+                    commands['connect'] = (args) => this.connectGmail();
+                    commands['disconnect'] = (args) => this.disconnectGmail();
+                    commands['gmail'] = (args) => this.gmailCommand(args);
+                    commands['inbox'] = () => this.gmailCommand(['inbox']);
+                    commands['unread'] = () => this.gmailCommand(['unread']);
+                }
+
+                if (AVAILABLE_APPS.calculator.enabled) {
+                    commands['calc'] = (args) => this.calculate(args.join(' '));
+                    commands['math'] = (args) => this.calculate(args.join(' '));
+                }
+
+                if (AVAILABLE_APPS.filemanager.enabled) {
+                    commands['ls'] = (args) => this.listFiles(args);
+                    commands['cd'] = (args) => this.changeDirectory(args[0]);
+                    commands['mkdir'] = (args) => this.makeDirectory(args[0]);
+                    commands['rm'] = (args) => this.removeFile(args[0]);
+                    commands['cat'] = (args) => this.displayFile(args[0]);
+                    commands['touch'] = (args) => this.createFile(args[0]);
+                }
+
+                if (AVAILABLE_APPS.notes.enabled) {
+                    commands['note'] = (args) => this.noteCommand(args);
+                    commands['notes'] = () => this.listNotes();
+                    commands['save-note'] = (args) => this.saveNote(args);
+                }
+
+                if (AVAILABLE_APPS.system.enabled) {
+                    commands['ps'] = () => this.showProcesses();
+                    commands['htop'] = () => this.showSystemInfo();
+                    commands['df'] = () => this.showDiskUsage();
+                    commands['free'] = () => this.showMemoryUsage();
+                }
+
+                if (AVAILABLE_APPS.weather.enabled) {
+                    commands['weather'] = (args) => this.getWeather(args[0]);
+                }
+
+                return commands;
+            }
+
+            showHelp() {
+                let helpText = `
+TERMINAL OS v3.0.0 - Available Commands:
+
+CORE COMMANDS:
+  help          - Show this help message
+  clear/cls     - Clear the terminal screen
+  whoami        - Display current user
+  pwd           - Print working directory
+  date          - Show current date and time
+  uptime        - Show system uptime
+  status        - Show system status
+  settings      - Open configuration panel
+  logout/exit   - Log out of system
+
+AI ASSISTANT:
+  ai <message>  - Ask AI a question
+  assistant show/hide - Control AI panel
+                `;
+
+                // Add app-specific help based on enabled apps
+                if (AVAILABLE_APPS.gmail.enabled) {
+                    helpText += `
+GMAIL (${AVAILABLE_APPS.gmail.enabled ? 'ENABLED' : 'DISABLED'}):
+  connect       - Connect to Gmail account
+  disconnect    - Disconnect from Gmail
+  gmail inbox   - Show inbox messages
+  gmail unread  - Show unread messages
+  inbox         - Shortcut for inbox
+  unread        - Shortcut for unread messages`;
+                }
+
+                if (AVAILABLE_APPS.calculator.enabled) {
+                    helpText += `
+CALCULATOR (${AVAILABLE_APPS.calculator.enabled ? 'ENABLED' : 'DISABLED'}):
+  calc <expr>   - Calculate mathematical expression
+  math <expr>   - Calculate mathematical expression`;
+                }
+
+                if (AVAILABLE_APPS.filemanager.enabled) {
+                    helpText += `
+FILE MANAGER (${AVAILABLE_APPS.filemanager.enabled ? 'ENABLED' : 'DISABLED'}):
+  ls            - List directory contents
+  cd <dir>      - Change directory
+  mkdir <name>  - Create directory
+  rm <file>     - Remove file
+  cat <file>    - Display file contents
+  touch <file>  - Create empty file`;
+                }
+
+                if (AVAILABLE_APPS.notes.enabled) {
+                    helpText += `
+NOTES (${AVAILABLE_APPS.notes.enabled ? 'ENABLED' : 'DISABLED'}):
+  notes         - List all notes
+  note new <title> - Create new note
+  note view <id> - View note
+  note delete <id> - Delete note`;
+                }
+
+                if (AVAILABLE_APPS.system.enabled) {
+                    helpText += `
+SYSTEM MONITOR (${AVAILABLE_APPS.system.enabled ? 'ENABLED' : 'DISABLED'}):
+  ps            - Show running processes
+  htop          - Show system information
+  df            - Show disk usage
+  free          - Show memory usage`;
+                }
+
+                if (AVAILABLE_APPS.weather.enabled) {
+                    helpText += `
+WEATHER (${AVAILABLE_APPS.weather.enabled ? 'ENABLED' : 'DISABLED'}):
+  weather <city> - Get weather for city`;
+                }
+
+                helpText += `
+
+FUN COMMANDS:
+  matrix        - Display matrix effect
+  cowsay <text> - ASCII cow with message
+  fortune       - Display random fortune
+  figlet <text> - ASCII art text
+
+Use TAB for autocompletion and ↑/↓ for command history.
+Use Ctrl+L to clear, Ctrl+A for assistant, Ctrl+S for settings.
+                `;
+
+                this.print(helpText.trim(), 'info');
+            }
+
+            // File Manager Commands
+            listFiles(args) {
+                const path = args[0] || this.currentDirectory;
+                const contents = this.fileSystem[path];
+                
+                if (!contents) {
+                    this.print(`ls: cannot access '${path}': No such file or directory`, 'error');
+                    return;
+                }
+
+                this.print(`Contents of ${path}:`, 'info');
+                Object.entries(contents).forEach(([name, item]) => {
+                    const type = item.type === 'directory' ? 'd' : '-';
+                    const color = item.type === 'directory' ? 'info' : 'output';
+                    this.print(`${type}rwxr-xr-x 1 ${this.user} ${this.user} ${name}`, color);
+                });
+            }
+
+            changeDirectory(path) {
+                if (!path) {
+                    this.currentDirectory = '/home/admin';
+                    this.updatePrompt();
+                    return;
+                }
+
+                if (path === '..') {
+                    const parts = this.currentDirectory.split('/').filter(p => p);
+                    parts.pop();
+                    this.currentDirectory = '/' + parts.join('/') || '/home/admin';
+                } else if (path.startsWith('/')) {
+                    this.currentDirectory = path;
+                } else {
+                    this.currentDirectory += '/' + path;
+                }
+                
+                this.updatePrompt();
+                this.print(`Changed directory to ${this.currentDirectory}`, 'success');
+            }
+
+            makeDirectory(name) {
+                if (!name) {
+                    this.print('mkdir: missing operand', 'error');
+                    return;
+                }
+                
+                if (!this.fileSystem[this.currentDirectory]) {
+                    this.fileSystem[this.currentDirectory] = {};
+                }
+                
+                this.fileSystem[this.currentDirectory][name] = { type: 'directory' };
+                this.print(`Directory '${name}' created`, 'success');
+            }
+
+            createFile(name) {
+                if (!name) {
+                    this.print('touch: missing operand', 'error');
+                    return;
+                }
+                
+                if (!this.fileSystem[this.currentDirectory]) {
+                    this.fileSystem[this.currentDirectory] = {};
+                }
+                
+                this.fileSystem[this.currentDirectory][name] = { 
+                    type: 'file', 
+                    content: '',
+                    created: new Date().toISOString()
+                };
+                this.print(`File '${name}' created`, 'success');
+            }
+
+            displayFile(name) {
+                if (!name) {
+                    this.print('cat: missing operand', 'error');
+                    return;
+                }
+
+                const file = this.fileSystem[this.currentDirectory]?.[name];
+                if (!file) {
+                    this.print(`cat: ${name}: No such file or directory`, 'error');
+                    return;
+                }
+
+                if (file.type !== 'file') {
+                    this.print(`cat: ${name}: Is a directory`, 'error');
+                    return;
+                }
+
+                this.print(file.content || '[Empty file]', 'output');
+            }
+
+            removeFile(name) {
+                if (!name) {
+                    this.print('rm: missing operand', 'error');
+                    return;
+                }
+
+                if (this.fileSystem[this.currentDirectory]?.[name]) {
+                    delete this.fileSystem[this.currentDirectory][name];
+                    this.print(`File '${name}' removed`, 'success');
+                } else {
+                    this.print(`rm: cannot remove '${name}': No such file or directory`, 'error');
+                }
+            }
+
+            // Calculator Commands
+            calculate(expression) {
+                if (!expression) {
+                    this.print('Usage: calc <mathematical expression>', 'error');
+                    return;
+                }
+
+                try {
+                    // Safe math evaluation
+                    const result = Function('"use strict"; return (' + expression.replace(/[^0-9+\-*/.() ]/g, '') + ')')();
+                    this.print(`${expression} = ${result}`, 'success');
+                } catch (error) {
+                    this.print(`Calculation error: ${error.message}`, 'error');
+                }
+            }
+
+            // Notes Commands
+            noteCommand(args) {
+                if (!args.length) {
+                    this.print('Usage: note [new|view|delete] <args>', 'error');
+                    return;
+                }
+
+                const action = args[0];
+                switch(action) {
+                    case 'new':
+                        const title = args.slice(1).join(' ');
+                        if (!title) {
+                            this.print('Usage: note new <title>', 'error');
+                            return;
+                        }
+                        const note = {
+                            id: Date.now(),
+                            title: title,
+                            content: '',
+                            created: new Date().toISOString()
+                        };
+                        this.notes.push(note);
+                        this.saveNotes();
+                        this.print(`Note created with ID: ${note.id}`, 'success');
+                        break;
+                    
+                    case 'view':
+                        const viewId = parseInt(args[1]);
+                        const viewNote = this.notes.find(n => n.id === viewId);
+                        if (!viewNote) {
+                            this.print(`Note ${viewId} not found`, 'error');
+                            return;
+                        }
+                        this.print(`=== ${viewNote.title} ===`, 'info');
+                        this.print(viewNote.content || '[Empty note]', 'output');
+                        this.print(`Created: ${new Date(viewNote.created).toLocaleString()}`, 'info');
+                        break;
+                    
+                    case 'delete':
+                        const deleteId = parseInt(args[1]);
+                        const index = this.notes.findIndex(n => n.id === deleteId);
+                        if (index === -1) {
+                            this.print(`Note ${deleteId} not found`, 'error');
+                            return;
+                        }
+                        this.notes.splice(index, 1);
+                        this.saveNotes();
+                        this.print(`Note ${deleteId} deleted`, 'success');
+                        break;
+                    
+                    default:
+                        this.print('Usage: note [new|view|delete] <args>', 'error');
+                }
+            }
+
+            listNotes() {
+                if (this.notes.length === 0) {
+                    this.print('No notes found', 'info');
+                    return;
+                }
+
+                this.print('=== NOTES ===', 'info');
+                this.notes.forEach(note => {
+                    this.print(`${note.id}: ${note.title} (${new Date(note.created).toLocaleDateString()})`, 'output');
+                });
+            }
+
+            saveNotes() {
+                localStorage.setItem('terminal_notes', JSON.stringify(this.notes));
+            }
+
+            // Weather Command
+            async getWeather(city) {
+                if (!city) {
+                    this.print('Usage: weather <city>', 'error');
+                    return;
+                }
+
+                this.print(`Fetching weather for ${city}...`, 'info');
+                
+                // Simulate weather API call
+                setTimeout(() => {
+                    const conditions = ['Sunny', 'Cloudy', 'Rainy', 'Snowy', 'Partly Cloudy'];
+                    const temp = Math.floor(Math.random() * 30) + 5;
+                    const condition = conditions[Math.floor(Math.random() * conditions.length)];
+                    
+                    this.print(`=== WEATHER: ${city.toUpperCase()} ===`, 'info');
+                    this.print(`Temperature: ${temp}°C`, 'output');
+                    this.print(`Condition: ${condition}`, 'output');
+                    this.print(`Humidity: ${Math.floor(Math.random() * 50) + 30}%`, 'output');
+                    this.print(`Wind: ${Math.floor(Math.random() * 20) + 5} km/h`, 'output');
+                }, 1000);
+            }
+
+            // System Monitor Commands
+            showProcesses() {
+                const processes = [
+                    'PID  TTY          TIME CMD',
+                    '1    ?        00:00:01 init',
+                    '42   ?        00:00:00 terminal-os',
+                    '99   pts/0    00:00:00 bash',
+                    '123  pts/0    00:00:00 gmail-sync',
+                    '156  pts/0    00:00:00 ai-assistant',
+                    '203  pts/0    00:00:00 file-manager',
+                    '267  pts/0    00:00:00 calculator'
+                ];
+                processes.forEach(proc => this.print(proc, 'output'));
+            }
+
+            showSystemInfo() {
+                const info = [
+                    'Terminal OS System Information',
+                    '=============================',
+                    `Hostname: ${this.hostname}`,
+                    `User: ${this.user}`,
+                    `Uptime: ${this.getUptime()}`,
+                    `Load: 0.24, 0.18, 0.12`,
+                    `Memory: 2.1GB / 8.0GB (26%)`,
+                    `Disk: 45.2GB / 256GB (18%)`,
+                    `Gmail: ${this.gmailConnected ? 'Connected' : 'Disconnected'}`,
+                    `AI Provider: ${CONFIG.ai.provider || 'Not configured'}`,
+                    `Active Apps: ${Object.values(AVAILABLE_APPS).filter(app => app.enabled).length}`,
+                    `Theme: ${CONFIG.system.theme}`,
+                    `Font Size: ${CONFIG.system.fontSize}px`
+                ];
+                info.forEach(line => this.print(line, 'info'));
+            }
+
+            showDiskUsage() {
+                const usage = [
+                    'Filesystem     Size  Used Avail Use% Mounted on',
+                    '/dev/sda1      256G   45G  211G  18% /',
+                    'tmpfs          4.0G     0  4.0G   0% /dev/shm',
+                    '/dev/sda2      100G   23G   77G  24% /home',
+                    '/dev/sda3       50G   12G   38G  24% /var'
+                ];
+                usage.forEach(line => this.print(line, 'output'));
+            }
+
+            showMemoryUsage() {
+                const memory = [
+                    '              total        used        free      shared  buff/cache   available',
+                    'Mem:           8192        2048        4096         256        2048        5888',
+                    'Swap:          4096           0        4096'
+                ];
+                memory.forEach(line => this.print(line, 'output'));
+            }
+
+            showSystemStatus() {
+                this.print('=== SYSTEM STATUS ===', 'info');
+                this.print(`Uptime: ${this.getUptime()}`, 'output');
+                this.print(`User: ${this.user}@${this.hostname}`, 'output');
+                this.print(`Directory: ${this.currentDirectory}`, 'output');
+                this.print(`Commands executed: ${this.commandHistory.length}`, 'output');
+                this.print(`AI Status: ${CONFIG.ai.provider ? 'Configured' : 'Not configured'}`, 'output');
+                this.print(`Gmail Status: ${this.gmailConnected ? 'Connected' : 'Disconnected'}`, 'output');
+                this.print(`Active apps: ${Object.values(AVAILABLE_APPS).filter(app => app.enabled).length}/${Object.keys(AVAILABLE_APPS).length}`, 'output');
+            }
+
+            // AI Integration
+            async askAI(message) {
+                if (!message) {
+                    this.print('Usage: ai <your question>', 'error');
+                    return;
+                }
+
+                if (!CONFIG.ai.provider || !CONFIG.ai.apiKey) {
+                    this.print('AI not configured. Use "settings" to configure AI provider.', 'error');
+                    return;
+                }
+
+                this.print(`Asking AI: ${message}`, 'info');
+                this.print('AI is thinking...', 'loading');
+
+                try {
+                    const response = await this.callAI(message);
+                    this.print(response, 'ai-response');
+                } catch (error) {
+                    this.print(`AI Error: ${error.message}`, 'error');
+                }
+            }
+
+            async callAI(message) {
+                const { provider, apiKey, model, maxTokens } = CONFIG.ai;
+
+                switch(provider) {
+                    case 'openai':
+                        return await this.callOpenAI(message, apiKey, model, maxTokens);
+                    case 'anthropic':
+                        return await this.callAnthropic(message, apiKey, model, maxTokens);
+                    case 'google':
+                        return await this.callGoogle(message, apiKey, model, maxTokens);
+                    case 'ollama':
+                        return await this.callOllama(message, model, maxTokens);
+                    default:
+                        throw new Error('Unknown AI provider');
+                }
+            }
+
+            async callOpenAI(message, apiKey, model, maxTokens) {
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: model || 'gpt-3.5-turbo',
+                        messages: [{ role: 'user', content: message }],
+                        max_tokens: maxTokens,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`OpenAI API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content;
+            }
+
+            async callAnthropic(message, apiKey, model, maxTokens) {
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': apiKey,
+                        'anthropic-version': '2023-06-01'
+                    },
+                    body: JSON.stringify({
+                        model: model || 'claude-3-sonnet-20240229',
+                        max_tokens: maxTokens,
+                        messages: [{ role: 'user', content: message }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Anthropic API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.content[0].text;
+            }
+
+            async callGoogle(message, apiKey, model, maxTokens) {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-pro'}:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: message }] }],
+                        generationConfig: {
+                            maxOutputTokens: maxTokens,
+                            temperature: 0.7
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Google AI API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+            }
+
+            async callOllama(message, model, maxTokens) {
+                const response = await fetch('http://localhost:11434/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: model || 'llama2',
+                        prompt: message,
+                        stream: false
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Ollama API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.response;
+            }
+
+            // Gmail Integration
+            async connectGmail() {
+                if (!CONFIG.google.clientId || !CONFIG.google.apiKey) {
+                    this.print('Gmail not configured. Use "settings" to add Google credentials.', 'error');
+                    return;
+                }
+
+                this.print('Connecting to Gmail...', 'info');
+                this.assistant.updateStatus('Connecting to Gmail...');
+
+                try {
+                    await this.initGmailAuth();
+                    const authInstance = gapi.auth2.getAuthInstance();
+                    const user = await authInstance.signIn();
+                    
+                    if (user.isSignedIn()) {
+                        this.gmailConnected = true;
+                        const profile = user.getBasicProfile();
+                        this.print(`Gmail connected successfully!`, 'success');
+                        this.print(`Logged in as: ${profile.getEmail()}`, 'success');
+                        this.assistant.updateStatus('Gmail connected');
+                    }
+                } catch (error) {
+                    this.print(`Gmail connection failed: ${error.message}`, 'error');
+                    this.assistant.updateStatus('Gmail connection failed');
+                }
+            }
+
+            async disconnectGmail() {
+                if (!this.gmailConnected) {
+                    this.print('Gmail not connected', 'error');
+                    return;
+                }
+
+                try {
+                    await gapi.auth2.getAuthInstance().signOut();
+                    this.gmailConnected = false;
+                    this.print('Gmail disconnected', 'success');
+                    this.assistant.updateStatus('Gmail disconnected');
+                } catch (error) {
+                    this.print(`Error disconnecting: ${error.message}`, 'error');
+                }
+            }
+
+            async gmailCommand(args) {
+                if (!this.gmailConnected) {
+                    this.print('Gmail not connected. Use "connect" first.', 'error');
+                    return;
+                }
+
+                if (!args.length) {
+                    this.print('Usage: gmail [inbox|unread|count]', 'error');
+                    return;
+                }
+
+                const command = args[0].toLowerCase();
+                this.assistant.updateStatus(`Fetching Gmail ${command}...`);
+
+                try {
+                    switch(command) {
+                        case 'inbox':
+                            await this.fetchInbox();
+                            break;
+                        case 'unread':
+                            await this.fetchUnreadMessages();
+                            break;
+                        case 'count':
+                            await this.getMessageCounts();
+                            break;
+                        default:
+                            this.print(`Unknown Gmail command: ${command}`, 'error');
+                    }
+                } catch (error) {
+                    this.print(`Gmail error: ${error.message}`, 'error');
+                }
+                
+                this.assistant.updateStatus('Ready');
+            }
+
+            async fetchInbox(limit = 5) {
+                const response = await gapi.client.gmail.users.messages.list({
+                    userId: 'me',
+                    maxResults: limit
+                });
+
+                this.print(`=== INBOX (${limit} most recent) ===`, 'info');
+                
+                if (!response.result.messages) {
+                    this.print('No messages found', 'info');
+                    return;
+                }
+
+                for (const message of response.result.messages) {
+                    const details = await gapi.client.gmail.users.messages.get({
+                        userId: 'me',
+                        id: message.id,
+                        format: 'metadata',
+                        metadataHeaders: ['From', 'Subject', 'Date']
+                    });
+
+                    const headers = details.result.payload.headers;
+                    const from = headers.find(h => h.name === 'From')?.value || 'Unknown';
+                    const subject = headers.find(h => h.name === 'Subject')?.value || 'No Subject';
+                    const date = new Date(headers.find(h => h.name === 'Date')?.value).toLocaleDateString();
+
+                    this.print(`From: ${from.substring(0, 40)}...`, 'output');
+                    this.print(`Subject: ${subject.substring(0, 50)}...`, 'output');
+                    this.print(`Date: ${date}`, 'output');
+                    this.print('─'.repeat(50), 'info');
+                }
+            }
+
+            async fetchUnreadMessages() {
+                const response = await gapi.client.gmail.users.messages.list({
+                    userId: 'me',
+                    q: 'is:unread',
+                    maxResults: 10
+                });
+
+                const count = response.result.messages?.length || 0;
+                this.print(`=== UNREAD MESSAGES (${count}) ===`, 'info');
+
+                if (count === 0) {
+                    this.print('No unread messages', 'success');
+                    return;
+                }
+
+                for (const message of response.result.messages) {
+                    const details = await gapi.client.gmail.users.messages.get({
+                        userId: 'me',
+                        id: message.id,
+                        format: 'metadata',
+                        metadataHeaders: ['From', 'Subject']
+                    });
+
+                    const headers = details.result.payload.headers;
+                    const from = headers.find(h => h.name === 'From')?.value || 'Unknown';
+                    const subject = headers.find(h => h.name === 'Subject')?.value || 'No Subject';
+
+                    this.print(`• ${from.split('<')[0].trim()}: ${subject.substring(0, 40)}...`, 'output');
+                }
+            }
+
+            async getMessageCounts() {
+                const profile = await gapi.client.gmail.users.getProfile({ userId: 'me' });
+                
+                this.print('=== GMAIL STATISTICS ===', 'info');
+                this.print(`Total Messages: ${profile.result.messagesTotal}`, 'output');
+                this.print(`Total Threads: ${profile.result.threadsTotal}`, 'output');
+                this.print(`History ID: ${profile.result.historyId}`, 'output');
+            }
+
+            async initGmailAuth() {
+                if (!this.gmailAuth) {
+                    await new Promise((resolve) => {
+                        gapi.load('client:auth2', resolve);
+                    });
+                    
+                    await gapi.client.init({
+                        apiKey: CONFIG.google.apiKey,
+                        clientId: CONFIG.google.clientId,
+                        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest'],
+                        scope: 'https://www.googleapis.com/auth/gmail.readonly'
+                    });
+                    
+                    this.gmailAuth = gapi.auth2.getAuthInstance();
+                }
+            }
+
+            // Assistant Commands
+            assistantCommand(args) {
+                if (!args.length) {
+                    this.print('Usage: assistant [show|hide|status]', 'error');
+                    return;
+                }
+
+                switch(args[0]) {
+                    case 'show':
+                        showAssistant();
+                        this.print('AI Assistant panel displayed', 'success');
+                        break;
+                    case 'hide':
+                        hideAssistant();
+;
+            }
+
+            getUptime() {
+                const now = new Date();
+                const diff = now - this.startTime;
+                const hours = Math.floor(diff / 3600000);
+                const minutes = Math.floor((diff % 3600000) / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            async loadGoogleAPI() {
+                if (typeof gapi !== 'undefined' && CONFIG.google.clientId && CONFIG.google.apiKey) {
+                    try {
+                        await this.initGmailAuth();
+                        this.assistant.log('Google API ready');
+                    } catch (error) {
+                        this.assistant.log('Google API failed to load');
+                    }
+                }
+            }
+
+            initializeModules() {
+                this.modules = {
+                    'core': { loaded: true, version: '3.0.0' },
+                    'security': { loaded: true, version: '1.0.0' },
+                    'ai': { loaded: true, version: '1.0.0' }
+                };
+            }
+
+            initializeAssistant() {
+                this.assistant = new AIAssistant();
+            }
+
+            loadApps() {
+                // Update AVAILABLE_APPS with current config
+                Object.keys(AVAILABLE_APPS).forEach(key => {
+                    AVAILABLE_APPS[key].enabled = CONFIG.apps[key] || false;
+                });
+            }
+        }
+
+        /**
+         * AI Assistant Class
+         */
+        class AIAssistant {
+            constructor() {
+                this.logs = [];
+                this.commandCount = 0;
+                this.startTime = new Date();
+                this.status = 'Ready';
+                this.isVisible = false;
+                
+                this.init();
+            }
+
+            init() {
+                this.updateDisplay();
+                this.startStatusUpdates();
+                this.log('AI Assistant initialized');
+            }
+
+            log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = `[${timestamp}] ${message}`;
+                this.logs.push(logEntry);
+                
+                if (this.logs.length > 50) {
+                    this.logs.shift();
+                }
+                
+                this.updateDisplay();
+            }
+
+            logCommand(command) {
+                this.commandCount++;
+                this.log(`Command: ${command}`);
+            }
+
+            updateStatus(newStatus) {
+                this.status = newStatus;
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                const content = document.getElementById('assistant-content');
+                const status = document.getElementById('assistant-status');
+                
+                if (content) {
+                    content.innerHTML = this.logs.slice(-15).map(log => 
+                        `<div style="margin-bottom: 3px; font-size: 11px;">${log}</div>`
+                    ).join('');
+                    content.scrollTop = content.scrollHeight;
+                }
+                
+                if (status) {
+                    const uptime = this.getUptime();
+                    const provider = CONFIG.ai.provider || 'Not configured';
+                    status.innerHTML = `Status: ${this.status} | Provider: ${provider} | Uptime: ${uptime}`;
+                }
+            }
+
+            startStatusUpdates() {
+                setInterval(() => {
+                    if (this.isVisible) {
+                        this.updateDisplay();
+                    }
+                }, 1000);
+            }
+
+            getUptime() {
+                const now = new Date();
+                const diff = now - this.startTime;
+                const hours = Math.floor(diff / 3600000);
+                const minutes = Math.floor((diff % 3600000) / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            getStatus() {
+                return `AI Assistant Status:
+Status: ${this.status}
+Commands Processed: ${this.commandCount}
+Uptime: ${this.getUptime()}
+Log Entries: ${this.logs.length}
+Provider: ${CONFIG.ai.provider || 'Not configured'}
+Model: ${CONFIG.ai.model || 'Not set'}`;
+            }
+
+            show() {
+                this.isVisible = true;
+                const panel = document.getElementById('assistant-panel');
+                panel.style.display = 'flex';
+                this.log('Assistant panel opened');
+            }
+
+            hide() {
+                this.isVisible = false;
+                const panel = document.getElementById('assistant-panel');
+                panel.style.display = 'none';
+                this.log('Assistant panel closed');
+            }
+        }
+
+        /**
+         * Global Functions
+         */
+
+        // Authentication
+        function initializeTerminal() {
+            window.terminal = new TerminalOS();
+        }
+
+        // Assistant Panel Control
+        function toggleAssistant() {
+            const panel = document.getElementById('assistant-panel');
+            if (panel.style.display === 'none' || !panel.style.display) {
+                showAssistant();
+            } else {
+                hideAssistant();
+            }
+        }
+
+        function showAssistant() {
+            if (window.terminal && window.terminal.assistant) {
+                window.terminal.assistant.show();
+            }
+        }
+
+        function hideAssistant() {
+            if (window.terminal && window.terminal.assistant) {
+                window.terminal.assistant.hide();
+            }
+        }
+
+        // Settings Panel Control
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
+            if (panel.style.display === 'none' || !panel.style.display) {
+                window.terminal.openSettings();
+            } else {
+                panel.style.display = 'none';
+                window.terminal.print('Settings panel closed', 'info');
+            }
+        }
+
+        // AI Input Handling
+        function handleAIInput(event) {
+            if (event.key === 'Enter') {
+                sendToAI();
+            }
+        }
+
+        async function sendToAI() {
+            const input = document.getElementById('ai-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            input.value = '';
+            
+            // Display in assistant panel
+            const content = document.getElementById('assistant-content');
+            content.innerHTML += `<div style="color: var(--primary-green); margin: 5px 0;">You: ${message}</div>`;
+            
+            if (!CONFIG.ai.provider || !CONFIG.ai.apiKey) {
+                content.innerHTML += `<div style="color: var(--red); margin: 5px 0;">AI: Please configure AI settings first.</div>`;
+                content.scrollTop = content.scrollHeight;
+                return;
+            }
+
+            content.innerHTML += `<div style="color: var(--cyan); margin: 5px 0;">AI: Thinking...</div>`;
+            content.scrollTop = content.scrollHeight;
+
+            try {
+                const response = await window.terminal.callAI(message);
+                content.innerHTML = content.innerHTML.replace('AI: Thinking...', `AI: ${response}`);
+            } catch (error) {
+                content.innerHTML = content.innerHTML.replace('AI: Thinking...', `AI Error: ${error.message}`);
+            }
+            
+            content.scrollTop = content.scrollHeight;
+        }
+
+        // Settings Functions
+        function changePassword() {
+            const current = document.getElementById('current-password').value;
+            const newPass = document.getElementById('new-password').value;
+            const confirm = document.getElementById('confirm-password').value;
+
+            if (current !== CONFIG.password) {
+                window.terminal.print('Current password is incorrect', 'error');
+                return;
+            }
+
+            if (newPass !== confirm) {
+                window.terminal.print('New passwords do not match', 'error');
+                return;
+            }
+
+            if (newPass.length < 6) {
+                window.terminal.print('Password must be at least 6 characters', 'error');
+                return;
+            }
+
+            CONFIG.password = newPass;
+            localStorage.setItem('terminal_password', newPass);
+            
+            // Clear inputs
+            document.getElementById('current-password').value = '';
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-password').value = '';
+            
+            window.terminal.print('Password changed successfully', 'success');
+            window.terminal.assistant.log('Password updated');
+        }
+
+        function saveAIConfig() {
+            CONFIG.ai.provider = document.getElementById('ai-provider').value;
+            CONFIG.ai.apiKey = document.getElementById('ai-api-key').value;
+            CONFIG.ai.model = document.getElementById('ai-model').value;
+            CONFIG.ai.maxTokens = parseInt(document.getElementById('ai-max-tokens').value);
+
+            // Save to localStorage
+            localStorage.setItem('ai_provider', CONFIG.ai.provider);
+            localStorage.setItem('ai_api_key', CONFIG.ai.apiKey);
+            localStorage.setItem('ai_model', CONFIG.ai.model);
+            localStorage.setItem('ai_max_tokens', CONFIG.ai.maxTokens.toString());
+
+            window.terminal.print('AI configuration saved', 'success');
+            window.terminal.assistant.log(`AI configured: ${CONFIG.ai.provider}`);
+            window.terminal.assistant.updateDisplay();
+        }
+
+        function testAI() {
+            if (!CONFIG.ai.provider || !CONFIG.ai.apiKey) {
+                window.terminal.print('AI not configured', 'error');
+                return;
+            }
+
+            window.terminal.askAI('Hello, please respond with a short greeting to test the connection.');
+        }
+
+        function saveGoogleConfig() {
+            CONFIG.google.clientId = document.getElementById('google-client-id').value;
+            CONFIG.google.apiKey = document.getElementById('google-api-key').value;
+
+            localStorage.setItem('google_client_id', CONFIG.google.clientId);
+            localStorage.setItem('google_api_key', CONFIG.google.apiKey);
+
+            window.terminal.print('Google configuration saved', 'success');
+            window.terminal.assistant.log('Google API configured');
+            
+            // Reload Google API if configured
+            if (CONFIG.google.clientId && CONFIG.google.apiKey) {
+                window.terminal.loadGoogleAPI();
+            }
+        }
+
+        function saveSystemSettings() {
+            CONFIG.system.theme = document.getElementById('theme-selector').value;
+            CONFIG.system.fontSize = parseInt(document.getElementById('font-size').value);
+            CONFIG.system.historyLimit = parseInt(document.getElementById('history-limit').value);
+
+            localStorage.setItem('system_theme', CONFIG.system.theme);
+            localStorage.setItem('system_font_size', CONFIG.system.fontSize.toString());
+            localStorage.setItem('system_history_limit', CONFIG.system.historyLimit.toString());
+
+            window.terminal.applyTheme();
+            window.terminal.print('System settings saved', 'success');
+            window.terminal.assistant.log('System settings updated');
+        }
+
+        function resetSystem() {
+            if (confirm('Reset all settings to defaults? This cannot be undone.')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        function toggleApp(appKey) {
+            AVAILABLE_APPS[appKey].enabled = !AVAILABLE_APPS[appKey].enabled;
+            CONFIG.apps[appKey] = AVAILABLE_APPS[appKey].enabled;
+            
+            localStorage.setItem('enabled_apps', JSON.stringify(CONFIG.apps));
+            
+            window.terminal.renderAppGrid();
+            window.terminal.print(`App ${appKey} ${AVAILABLE_APPS[appKey].enabled ? 'enabled' : 'disabled'}`, 'success');
+            window.terminal.assistant.log(`App ${appKey} ${AVAILABLE_APPS[appKey].enabled ? 'enabled' : 'disabled'}`);
+        }
+
+        /**
+         * Keyboard Shortcuts
+         */
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+L to clear terminal
+            if (e.ctrlKey && e.key === 'l') {
+                e.preventDefault();
+                if (window.terminal) {
+                    window.terminal.clearTerminal();
+                }
+            }
+            
+            // Ctrl+A to toggle assistant
+            if (e.ctrlKey && e.key === 'a') {
+                e.preventDefault();
+                toggleAssistant();
+            }
+
+            // Ctrl+S to toggle settings
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                toggleSettings();
+            }
+            
+            // Escape to hide panels
+            if (e.key === 'Escape') {
+                hideAssistant();
+                document.getElementById('settings-panel').style.display = 'none';
+            }
+        });
+
+        /**
+         * Font size slider handler
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            const fontSizeSlider = document.getElementById('font-size');
+            if (fontSizeSlider) {
+                fontSizeSlider.addEventListener('input', (e) => {
+                    document.getElementById('font-size-value').textContent = e.target.value + 'px';
+                });
+            }
+        });
+
+        /**
+         * Error Handling
+         */
+        window.addEventListener('unhandledrejection', (event) => {
+            if (window.terminal) {
+                window.terminal.print(`System Error: ${event.reason}`, 'error');
+                if (window.terminal.assistant) {
+                    window.terminal.assistant.log(`Unhandled error: ${event.reason}`);
+                }
+            }
+            event.preventDefault();
+        });
+
+        window.addEventListener('error', (event) => {
+            if (window.terminal && window.terminal.assistant) {
+                window.terminal.assistant.log(`JavaScript error: ${event.message}`);
+            }
+        });
+    </script>
+</body>
+</html>

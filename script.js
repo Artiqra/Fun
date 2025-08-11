@@ -82,8 +82,7 @@ Available commands:
   help                - Show this help
   connect gmail       - Sign in to Gmail
   read emails         - List recent emails
-  show progress       - Show assistant progress
-  ask gemini <q>      - Ask AI anything
+  ask gemini <q>      - Ask AI anything (fast)
   gemini <q>          - Short version
   clear               - Clear terminal
   apps                - List available apps
@@ -114,7 +113,7 @@ Available commands:
 Installed Apps:
   - Email Reader
   - Progress Tracker
-  - Gemini AI
+  - Gemini Flash AI (Fast & Free)
   - Task Manager (coming soon)
 
 Use: add app <name> to install
@@ -122,7 +121,7 @@ Use: add app <name> to install
     return;
   }
 
-  // === GEMINI AI COMMANDS ===
+  // === GEMINI 1.5 FLASH: Fast, Free, Lightweight AI ===
   if (cmd.startsWith('ask gemini ') || cmd.startsWith('gemini ')) {
     const query = cmd.replace(/^(ask gemini |gemini )/, '').trim();
     if (!query) {
@@ -130,12 +129,12 @@ Use: add app <name> to install
       return;
     }
 
-    print(`[>] Asking Gemini: "${query}"...`);
-    updateAssistant(`Gemini query: "${query}"`);
+    print(`[>] Asking AI: "${query}"...`);
+    updateAssistant(`Querying Gemini Flash...`);
 
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyDOqzVfYxJCepOfe1cmOHG9bK0tVqAOYlQ`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyDOqzVfYxJCepOfe1cmOHG9bK0tVqAOYlQ`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -148,12 +147,13 @@ Use: add app <name> to install
       const data = await response.json();
 
       if (data.error) {
-        print(`[!] Gemini Error: ${data.error.message}`);
+        print(`[!] AI Error: ${data.error.message}`);
         return;
       }
 
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response received.';
-      print(`[Gemini] ${text.replace(/\n/g, '<br>')}`);
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response.';
+      print(`[AI] ${text.replace(/\n/g, '<br>')}`);
+      updateAssistant("AI responded.");
     } catch (err) {
       print(`[!] Request failed: ${err.message}`);
     }
@@ -209,18 +209,4 @@ async function listEmails() {
     print('[>] Recent Emails:');
     for (let msg of messages) {
       const full = await gapi.client.gmail.users.messages.get({
-        userId: 'me',
-        id: msg.id
-      });
-
-      const headers = full.result.payload.headers;
-      const from = headers.find(h => h.name === 'From')?.value || 'Unknown';
-      const subject = headers.find(h => h.name === 'Subject')?.value || '(No Subject)';
-      print(`  From: ${from}`);
-      print(`  Subject: ${subject}`);
-      print(`  ———————`);
-    }
-  } catch (err) {
-    print(`[!] Error: ${err.message}`);
-  }
-}
+        userId: '

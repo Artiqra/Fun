@@ -1,3 +1,4 @@
+// 🔒 Terminal Password Lock
 (function () {
   const correctPassword = "laka1212";
   let isAuthenticated = false;
@@ -18,23 +19,28 @@
   }
 })();
 
+// Terminal & Assistant
 const output = document.getElementById('output');
 const input = document.getElementById('command-input');
 const assistantOutput = document.getElementById('assistant-output');
 
+// Command History
 let history = [];
 let historyIndex = -1;
 
+// Add line to terminal output
 function print(text) {
   output.innerHTML += text + '\n';
   output.scrollTop = output.scrollHeight;
 }
 
+// Update assistant panel
 function updateAssistant(text) {
   assistantOutput.innerHTML += `<br>> ${text}`;
   assistantOutput.scrollTop = assistantOutput.scrollHeight;
 }
 
+// Handle command input
 input.addEventListener('keydown', async (e) => {
   if (e.key === 'Enter') {
     const cmd = input.value.trim();
@@ -47,7 +53,8 @@ input.addEventListener('keydown', async (e) => {
     await handleCommand(cmd.toLowerCase());
   }
 
-  if (e.key === 'ArrowUp' && history[historyIndex - 1]) {
+  // Command history navigation
+  if (e.key === 'ArrowUp' && history[historyIndex - 1] !== undefined) {
     historyIndex--;
     input.value = history[historyIndex];
   }
@@ -62,6 +69,7 @@ input.addEventListener('keydown', async (e) => {
   }
 });
 
+// Command Processor
 async function handleCommand(cmd) {
   if (cmd === '' || cmd === 'clear') {
     output.innerHTML = '';
@@ -71,16 +79,19 @@ async function handleCommand(cmd) {
   if (cmd === 'help') {
     print(`
 Available commands:
-  help            - Show this help
-  connect gmail   - Sign in to Gmail
-  read emails     - List recent emails
-  show progress   - Show assistant progress
-  clear           - Clear terminal
-  apps            - List available apps
+  help                - Show this help
+  connect gmail       - Sign in to Gmail
+  read emails         - List recent emails
+  show progress       - Show assistant progress
+  ask gemini <q>      - Ask AI anything
+  gemini <q>          - Short version
+  clear               - Clear terminal
+  apps                - List available apps
 `);
     return;
   }
 
+  // === GMAIL COMMANDS ===
   if (cmd === 'connect gmail') {
     gapi.load('client:auth2', initGapi);
     print('[>] Loading Gmail API...');
@@ -103,28 +114,61 @@ Available commands:
 Installed Apps:
   - Email Reader
   - Progress Tracker
+  - Gemini AI
   - Task Manager (coming soon)
-  - File Sync (coming soon)
 
 Use: add app <name> to install
 `);
     return;
   }
 
-  if (cmd.startsWith('add app')) {
-    const appName = cmd.replace('add app ', '');
-    updateAssistant(`App '${appName}' queued for installation...`);
-    print(`[>] Installing '${appName}'... (Feature coming soon)`);
+  // === GEMINI AI COMMANDS ===
+  if (cmd.startsWith('ask gemini ') || cmd.startsWith('gemini ')) {
+    const query = cmd.replace(/^(ask gemini |gemini )/, '').trim();
+    if (!query) {
+      print('[!] Usage: ask gemini <question>');
+      return;
+    }
+
+    print(`[>] Asking Gemini: "${query}"...`);
+    updateAssistant(`Gemini query: "${query}"`);
+
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyDOqzVfYxJCepOfe1cmOHG9bK0tVqAOYlQ`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: query }] }]
+          })
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.error) {
+        print(`[!] Gemini Error: ${data.error.message}`);
+        return;
+      }
+
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response received.';
+      print(`[Gemini] ${text.replace(/\n/g, '<br>')}`);
+    } catch (err) {
+      print(`[!] Request failed: ${err.message}`);
+    }
     return;
   }
 
+  // Unknown command
   print(`[!] Command not recognized: ${cmd}`);
 }
 
+// === GMAIL: Google API Setup ===
 function initGapi() {
   gapi.client.init({
     apiKey: 'AIzaSyAICfMFKJbSi1DK6Nshop7IqFOdswI2Ap8',
-    clientId: 'YOUR_CLIENT_ID', // ← REPLACE THIS!
+    clientId: 'YOUR_CLIENT_ID', // ← Replace with your OAuth Client ID
     discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest'],
     scope: 'https://www.googleapis.com/auth/gmail.readonly'
   }).then(() => {

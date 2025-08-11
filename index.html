@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal OS - Secure Command Interface</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https: wss:;">
+    
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-green: #00ff00;
+            --dark-green: #00cc00;
+            --bg-black: #000000;
+            --terminal-bg: #0a0a0a;
+            --text-shadow: 0 0 5px var(--primary-green);
+            --font-terminal: 'Courier New', 'Monaco', 'Menlo', monospace;
+            --red: #ff4444;
+            --yellow: #ffff00;
+            --blue: #4444ff;
+            --cyan: #44ffff;
+        }
+
+        body {
+            background: var(--bg-black);
+            color: var(--primary-green);
+            font-family: var(--font-terminal);
+            font-size: 14px;
+            line-height: 1.4;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Login Screen */
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-black);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .login-container {
+            text-align: center;
+            padding: 40px;
+            border: 2px solid var(--primary-green);
+            border-radius: 10px;
+            background: var(--terminal-bg);
+            box-shadow: var(--text-shadow);
+        }
+
+        .login-container h1 {
+            font-size: 28px;
+            margin-bottom: 30px;
+            text-shadow: var(--text-shadow);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .login-input {
+            background: transparent;
+            border: 1px solid var(--dark-green);
+            color: var(--primary-green);
+            font-family: var(--font-terminal);
+            font-size: 16px;
+            padding: 10px 15px;
+            margin: 10px 0;
+            width: 300px;
+            text-align: center;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: var(--text-shadow);
+        }
+
+        .login-button {
+            background: var(--primary-green);
+            color: var(--bg-black);
+            border: none;
+            padding: 12px 30px;
+            font-family: var(--font-terminal);
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .login-button:hover {
+            background: var(--dark-green);
+        }
+
+        .login-error {
+            color: var(--red);
+            margin-top: 15px;
+            font-size: 12px;
+        }
+
+        /* Logo */
+        .logo {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 60px;
+            height: 60px;
+            background: var(--primary-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--bg-black);
+            box-shadow: var(--text-shadow);
+            border: 2px solid var(--primary-green);
+        }
+
+        /* Main Terminal Container */
+        .terminal-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            padding-right: 100px;
+        }
+
+        /* Terminal Header */
+        .terminal-header {
+            margin-bottom: 20px;
+            text-shadow: var(--text-shadow);
+        }
+
+        .terminal-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 5px var(--primary-green); }
+            to { text-shadow: 0 0 20px var(--primary-green), 0 0 30px var(--primary-green); }
+        }
+
+        /* Terminal Output Area */
+        .terminal-output {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: var(--terminal-bg);
+            border: 1px solid var(--dark-green);
+            border-radius: 3px;
+            font-size: 13px;
+        }
+
+        .terminal-line {
+            margin-bottom: 5px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .prompt {
+            color: var(--primary-green);
+            text-shadow: var(--text-shadow);
+        }
+
+        .command {
+            color: var(--primary-green);
+        }
+
+        .output {
+            color: #cccccc;
+            margin-left: 20px;
+        }
+
+        .error {
+            color: var(--red);
+        }
+
+        .success {
+            color: var(--primary-green);
+            text-shadow: var(--text-shadow);
+        }
+
+        .info {
+            color: var(--blue);
+        }
+
+        .warning {
+            color: var(--yellow);
+        }
+
+        .ai-response {
+            color: var(--cyan);
+            border-left: 3px solid var(--cyan);
+            padding-left: 10px;
+            margin: 10px 0;
+            background: rgba(68, 255, 255, 0.05);
+        }
+
+        /* Terminal Input */
+        .terminal-input-container {
+            display: flex;
+            align-items: center;
+            background: var(--terminal-bg);
+            border: 1px solid var(--dark-green);
+            border-radius: 3px;
+            padding: 8px;
+        }
+
+        .terminal-prompt {
+            color: var(--primary-green);
+            margin-right: 10px;
+            text-shadow: var(--text-shadow);
+            flex-shrink: 0;
+        }
+
+        .terminal-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--primary-green);
+            font-family: var(--font-terminal);
+            font-size: 14px;
+            outline: none;
+            caret-color: var(--primary-green);
+        }
+
+        /* AI Assistant Panel */
+        .assistant-panel {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            width: 350px;
+            height: 450px;
+            background: var(--terminal-bg);
+            border: 2px solid var(--cyan);
+            border-radius: 5px;
+            display: none;
+            flex-direction: column;
+            z-index: 500;
+            box-shadow: 0 0 20px rgba(68, 255, 255, 0.3);
+        }
+
+        .assistant-header {
+            background: var(--cyan);
+            color: var(--bg-black);
+            padding: 8px 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .assistant-close {
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--bg-black);
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .assistant-content {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+
+        .assistant-input {
+            display: flex;
+            padding: 8px;
+            border-top: 1px solid var(--cyan);
+        }
+
+        .assistant-input input {
+            flex: 1;
+            background: transparent;
+            border: 1px solid var(--cyan);
+            color: var(--primary-green);
+            font-family: var(--font-terminal);
+            font-size: 12px;
+            padding: 5px;
+        }
+
+        .assistant-input button {
+            background: var(--cyan);
+            color: var(--bg-black);
+            border: none;
+            padding: 5px 10px;
+            margin-left: 5px;
+            cursor: pointer;
+            font-family: var(--font-terminal);
+            font-size: 12px;
+        }
+
+        .assistant-status {
+            padding: 8px 12px;
+            background: rgba(68, 255, 255, 0.1);
+            border-top: 1px solid var(--cyan);
+            font-size: 11px;
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            position: fixed;
+            top: 50px;
+            left: 50px;
+            right: 50px;
+            bottom: 50px;
+            background: var(--terminal-bg);
+            border: 2px solid var(--yellow);
+            border-radius: 5px;
+            display: none;
+            flex-direction: column;
+            z-index: 600;
+            box-shadow: 0 0 30px rgba(255, 255, 0, 0.3);
+        }
+
+        .settings-header {
+            background: var(--yellow);
+            color: var(--bg-black);
+            padding: 12px 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .settings-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .settings-section {
+            margin-bottom: 30px;
+            border: 1px solid var(--dark-green);
+            border-radius: 5px;
+            padding: 15px;
+        }
+
+        .settings-section h3 {
+            color: var(--primary-green);
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .settings-item {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .settings-label {
+            color: #cccccc;
+            flex: 1;
+        }
+
+        .settings-input {
+            background: transparent;
+            border: 1px solid var(--dark-green);
+            color: var(--primary-green);
+            font-family: var(--font-terminal);
+            font-size: 12px;
+            padding: 5px 10px;
+            width: 200px;
+        }
+
+        .settings-button {
+            background: var(--primary-green);
+            color: var(--bg-black);
+            border: none;
+            padding: 8px 15px;
+            font-family: var(--font-terminal);
+            font-size: 12px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .settings-button:hover {
+            background: var(--dark-green);
+        }
+
+        /* App Grid */
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .app-item {
+            border: 1px solid var(--dark-green);
+            padding: 10px;
+            border-radius: 3px;
+            background: rgba(0, 255, 0, 0.05);
+        }
+
+        .app-item h4 {
+            color: var(--primary-green);
+            margin-bottom: 5px;
+        }
+
+        .app-item p {
+            color: #cccccc;
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+
+        .app-toggle {
+            background: var(--primary-green);
+            color: var(--bg-black);
+            border: none;
+            padding: 5px 10px;
+            font-family: var(--font-terminal);
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .app-toggle.disabled {
+            background: var(--red);
+        }
+
+        /* Loading Animation */
+        .loading {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .terminal-container {
+                padding: 10px;
+                padding-right: 80px;
+            }
+
+            .logo {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+                top: 10px;
+                right: 10px;
+            }
+
+            .assistant-panel {
+                width: 300px;
+                height: 400px;
+                top: 80px;
+                right: 10px;
+            }
+
+            .settings-panel {
+                top: 20px;
+                left: 20px;
+                right: 20px;
+                bottom: 20px;
+            }
+
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                font-size: 12px;
+            }
+
+            .login-input {
+                width: 250px;
+            }
+
+            .terminal-container {
+                padding: 5px;
+                padding-right: 60px;
+            }
+
+            .assistant-panel {
+                width: calc(100vw - 20px);
+                height: 350px;
+                right: 10px;
+                left: 10px;
+                top: 70px;
+            }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-black);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--dark-green);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-green);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="login-screen">
+        <div class="login-container">
+            <h1>TERMINAL OS</h1>
+            <div>SECURE ACCESS REQUIRED</div>
+            <input type="password" class="login-input" id="password-input" placeholder="Enter Password" autofocus>
+            <div class="login-error" id="login-error"></div>
+            <button class="login-button" onclick="attemptLogin()">ACCESS SYSTEM</button>
+        </div>
+    </div>
+
+    <!-- Main Interface (Hidden initially) -->
+    <div id="main-interface" class="hidden">
+        <!-- Logo -->
+        <div class="logo">C</div>
+
+        <!-- Terminal Container -->
+        <div class="terminal-container">
+            <!-- Terminal Header -->
+            <div class="terminal-header">
+                <h1>TERMINAL OS v3.0.0 - SECURE MODE</h1>
+                <div>System Ready - Type 'help' for commands</div>
+            </div>
+
+            <!-- Terminal Output -->
+            <div class="terminal-output" id="terminal-output">
+                <div class="terminal-line">
+                    <span class="prompt">admin@terminal-os:~$</span> <span class="command">system boot --secure</span>
+                </div>
+                <div class="terminal-line output">Initializing Secure Terminal OS...</div>
+                <div class="terminal-line output">Loading security modules: [████████████████████] 100%</div>
+                <div class="terminal-line output">Loading AI integration: [████████████████████] 100%</div>
+                <div class="terminal-line output success">System ready. Welcome to Terminal OS!</div>
+                <div class="terminal-line output">Type 'help' to see available commands.</div>
+            </div>
+
+            <!-- Terminal Input -->
+            <div class="terminal-input-container">
+                <span class="terminal-prompt" id="terminal-prompt">admin@terminal-os:~$</span>
+                <input type="text" class="terminal-input" id="terminal-input" autofocus autocomplete="off">
+            </div>
+        </div>
+
+        <!-- AI Assistant Panel -->
+        <div class="assistant-panel" id="assistant-panel">
+            <div class="assistant-header">
+                <span>🤖 AI Assistant</span>
+                <button class="assistant-close" onclick="toggleAssistant()">&times;</button>
+            </div>
+            <div class="assistant-content" id="assistant-content">
+                <div class="ai-response">AI Assistant initialized and ready for queries.</div>
+                <div>Monitoring system activity...</div>
+                <div>Available AI providers: OpenAI, Anthropic, Google, Ollama</div>
+            </div>
+            <div class="assistant-input">
+                <input type="text" id="ai-input" placeholder="Ask AI anything..." onkeypress="handleAIInput(event)">
+                <button onclick="sendToAI()">Send</button>
+            </div>
+            <div class="assistant-status" id="assistant-status">
+                Status: Ready | Provider: Not configured | Uptime: 00:00:00
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div class="settings-panel" id="settings-panel">
+            <div class="settings-header">
+                <span>⚙️ System Configuration</span>
+                <button class="assistant-close" onclick="toggleSettings()">&times;</button>
+            </div>
+            <div class="settings-content">
+                <!-- Security Settings -->
+                <div class="settings-section">
+                    <h3>🔐 Security Settings</h3>
+                    <div class="settings-item">
+                        <span class="settings-label">Current Password:</span>
+                        <input type="password" class="settings-input" id="current-password" placeholder="Enter current password">
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">New Password:</span>
+                        <input type="password" class="settings-input" id="new-password" placeholder="Enter new password">
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Confirm Password:</span>
+                        <input type="password" class="settings-input" id="confirm-password" placeholder="Confirm new password">
+                    </div>
+                    <button class="settings-button" onclick="changePassword()">Change Password</button>
+                </div>
+
+                <!-- AI Configuration -->
+                <div class="settings-section">
+                    <h3>🤖 AI Configuration</h3>
+                    <div class="settings-item">
+                        <span class="settings-label">AI Provider:</span>
+                        <select class="settings-input" id="ai-provider">
+                            <option value="">Select Provider</option>
+                            <option value="openai">OpenAI (GPT-4)</option>
+                            <option value="anthropic">Anthropic (Claude)</option>
+                            <option value="google">Google (Gemini)</option>
+                            <option value="ollama">Ollama (Local)</option>
+                        </select>
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">API Key:</span>
+                        <input type="password" class="settings-input" id="ai-api-key" placeholder="Enter API key">
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Model:</span>
+                        <input type="text" class="settings-input" id="ai-model" placeholder="e.g., gpt-4, claude-3">
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Max Tokens:</span>
+                        <input type="number" class="settings-input" id="ai-max-tokens" value="150" min="50" max="2000">
+                    </div>
+                    <button class="settings-button" onclick="saveAIConfig()">Save AI Config</button>
+                    <button class="settings-button" onclick="testAI()">Test AI</button>
+                </div>
+
+                <!-- Gmail Settings -->
+                <div class="settings-section">
+                    <h3>📧 Gmail Configuration</h3>
+                    <div class="settings-item">
+                        <span class="settings-label">Google Client ID:</span>
+                        <input type="text" class="settings-input" id="google-client-id" placeholder="Enter Google OAuth Client ID">
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Google API Key:</span>
+                        <input type="password" class="settings-input" id="google-api-key" placeholder="Enter Google API Key">
+                    </div>
+                    <button class="settings-button" onclick="saveGoogleConfig()">Save Gmail Config</button>
+                </div>
+
+                <!-- App Management -->
+                <div class="settings-section">
+                    <h3>📱 App Management</h3>
+                    <div class="app-grid" id="app-grid">
+                        <!-- Apps will be dynamically loaded here -->
+                    </div>
+                </div>
+
+                <!-- System Settings -->
+                <div class="settings-section">
+                    <h3>💻 System Settings</h3>
+                    <div class="settings-item">
+                        <span class="settings-label">Terminal Theme:</span>
+                        <select class="settings-input" id="theme-selector">
+                            <option value="green">Matrix Green</option>
+                            <option value="amber">Amber</option>
+                            <option value="cyan">Cyan</option>
+                            <option value="white">White</option>
+                        </select>
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Font Size:</span>
+                        <input type="range" class="settings-input" id="font-size" min="10" max="20" value="14">
+                        <span id="font-size-value">14px</span>
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Command History Limit:</span>
+                        <input type="number" class="settings-input" id="history-limit" value="100" min="10" max="1000">
+                    </div>
+                    <button class="settings-button" onclick="saveSystemSettings()">Save Settings</button>
+                    <button class="settings-button" onclick="resetSystem()">Reset to Defaults</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google APIs -->
+    <script src="https://apis.google.com/js/api.js"></script>
+
+    <script>
+        /**
+         * TERMINAL OS v3.0.0 - Enhanced Secure Version
+         * Features: Password Protection, AI Integration, App Management, Settings
+         */
+
+        // Global configuration object
+        const CONFIG = {
+            password: localStorage.getItem('terminal_password') || 'admin123',
+            ai: {
+                provider: localStorage.getItem('ai_provider') || '',
+                apiKey: localStorage.getItem('ai_api_key') || '',
+                model: localStorage.getItem('ai_model') || '',
+                maxTokens: parseInt(localStorage.getItem('ai_max_tokens')) || 150
+            },
+            google: {
+                clientId: localStorage.getItem('google_client_id') || '',
+                apiKey: localStorage.getItem('google_api_key') || ''
+            },
+            system: {
+                theme: localStorage.getItem('system_theme') || 'green',
+                fontSize: parseInt(localStorage.getItem('system_font_size')) || 14,
+                historyLimit: parseInt(localStorage.getItem('system_history_limit')) || 100
+            },
+            apps: JSON.parse(localStorage.getItem('enabled_apps') || '{}')
+        };
+
+        // Available applications
+        const AVAILABLE_APPS = {
+            gmail: {
+                name: 'Gmail Integration',
+                description: 'Read emails, check inbox, manage messages',
+                enabled: true,
+                commands: ['gmail', 'inbox', 'unread', 'connect gmail']
+            },
+            calculator: {
+                name: 'Calculator',
+                description: 'Perform mathematical calculations',
+                enabled: true,
+                commands: ['calc', 'math']
+            },
+            filemanager: {
+                name: 'File Manager',
+                description: 'Browse and manage files (simulated)',
+                enabled: true,
+                commands: ['ls', 'cd', 'mkdir', 'rm', 'cat']
+            },
+            weather: {
+                name: 'Weather App',
+                description: 'Get weather information for any city',
+                enabled: false,
+                commands: ['weather']
+            },
+            notes: {
+                name: 'Notes App',
+                description: 'Create and manage text notes',
+                enabled: true,
+                commands: ['note', 'notes', 'save-note']
+            },
+            system: {
+                name: 'System Monitor',
+                description: 'Monitor system resources and processes',
+                enabled: true,
+                commands: ['htop', 'ps', 'df', 'free', 'uptime']
+            }
+        };
+
+        class TerminalOS {
+            constructor() {
+                this.commandHistory = [];
+                this.historyIndex = -1;
+                this.currentDirectory = '/home/admin';
+                this.user = 'admin';
+                this.hostname = 'terminal-os';
+                this.modules = {};
+                this.assistant = null;
+                this.fileSystem = this.initFileSystem();
+                this.notes = JSON.parse(localStorage.getItem('terminal_notes') || '[]');
+                
+                // Gmail integration
+                this.gmailAuth = null;
+                this.gmailConnected = false;
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.initializeModules();
+                this.initializeAssistant();
+                this.updatePrompt();
+                this.applyTheme();
+                this.loadGoogleAPI();
+                this.loadApps();
+            }
+
+            initFileSystem() {
+                return {
+                    '/': {
+                        type: 'directory',
+                        contents: {
+                            'home': {
+                                type: 'directory',
+                                contents: {
+                                    'admin': {
+                                        type: 'directory',
+                                        contents: {
+                                            'documents': { type: 'directory', contents: {} },
+                                            'downloads': { type: 'directory', contents: {} },
+                                            'projects': { type: 'directory', contents: {} },
+                                            'readme.txt': { type: 'file', content: 'Welcome to Terminal OS!' }
+                                        }
+                                    }
+                                }
+                            },
+                            'etc': { type: 'directory', contents: {} },
+                            'var': { type: 'directory', contents: {} },
+                            'tmp': { type: 'directory', contents: {} }
+                        }
+                    }
+                };
+            }
+
+            setupEventListeners() {
+                const input = document.getElementById('terminal-input');
+                
+                input.addEventListener('keydown', (e) => {
+                    switch(e.key) {
+                        case 'Enter':
+                            this.executeCommand(input.value.trim());
+                            input.value = '';
+                            break;
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            this.navigateHistory(-1);
+                            break;
+                        case 'ArrowDown':
+                            e.preventDefault();
+                            this.navigateHistory(1);
+                            break;
+                        case 'Tab':
+                            e.preventDefault();
+                            this.autoComplete(input.value);
+                            break;
+                    }
+                });
+
+                // Keep input focused
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.settings-panel') && !e.target.closest('.assistant-panel')) {
+                        input.focus();
+                    }
+                });
+
+                // Settings font size slider
+                const fontSizeSlider = document.getElementById('font-size');
+                if (fontSizeSlider) {
+                    fontSizeSlider.addEventListener('input', (e) => {
+                        document.getElementById('font-size-value').textContent = e.target.value + 'px';
+                    });
+                }
+            }
+
+            navigateHistory(direction) {
+                const input = document.getElementById('terminal-input');
+                
+                if (direction === -1 && this.historyIndex < this.commandHistory.length - 1) {
+                    this.historyIndex++;
+                } else if (direction === 1 && this.historyIndex > 0) {
+                    this.historyIndex--;
+                } else if (direction === 1 && this.historyIndex === 0) {
+                    this.historyIndex = -1;
+                    input.value = '';
+                    return;
+                }
+
+                if (this.historyIndex >= 0) {
+                    input.value = this.commandHistory[this.commandHistory.length - 1 - this.historyIndex];
+                }
+            }
+
+            executeCommand(commandLine) {
+                if (!commandLine) return;
+                
+                // Add to history
+                this.commandHistory.push(commandLine);
+                if (this.commandHistory.length > CONFIG.system.historyLimit) {
+                    this.commandHistory.shift();
+                }
+                this.historyIndex = -1;
+                
+                // Display command
+                this.print(`${this.getPrompt()} ${commandLine}`, 'command');
+                
+                // Parse command
+                const parts = commandLine.split(' ');
+                const command = parts[0].toLowerCase();
+                const args = parts.slice(1);
+                
+                // Log to assistant
+                this.assistant.logCommand(commandLine);
+                
+                // Execute
+                this.runCommand(command, args);
+            }
+
+            runCommand(command, args) {
+                const commands = this.getAvailableCommands();
+                
+                if (commands[command]) {
+                    try {
+                        commands[command](args);
+                    } catch (error) {
+                        this.print(`Error executing command: ${error.message}`, 'error');
+                    }
+                } else {
+                    this.print(`Command not found: ${command}. Type 'help' for available commands.`, 'error');
+                }
+            }
+
+            getAvailableCommands() {
+                const baseCommands = {
+                    // Core commands
+                    help: () => this.showHelp(),
+                    clear: () => this.clear
